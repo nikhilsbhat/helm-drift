@@ -1,0 +1,17 @@
+name: drift
+flags:
+  - set
+  - set-file
+  - set-string
+  - values
+  - log-level
+  - skip-tests
+commands:
+  - name: run
+    flags:
+      - from-release
+      - regex
+      - skip-cleaning
+      - skip-validation
+      - temp-path
+  - name: version
