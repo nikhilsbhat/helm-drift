@@ -22,6 +22,7 @@ func (drift *Drift) kubeCmd(args ...string) *exec.Cmd {
 	cmd := exec.CommandContext(context.Background(), "kubectl")
 	cmd.Args = append(cmd.Args, "diff")
 	cmd.Args = append(cmd.Args, args...)
+	cmd.Args = append(cmd.Args, setNamespace())
 	cmd.Env = drift.getKubeEnvironments()
 
 	drift.log.Debugf("running command '%s' to find diff", cmd.String())
@@ -55,4 +56,8 @@ func (drift *Drift) getKubeEnvironments() []string {
 
 func constructEnv(key, value string) string {
 	return fmt.Sprintf("%s=%s", key, value)
+}
+
+func setNamespace() string {
+	return fmt.Sprintf("-n=%s", os.Getenv(helmNamespace))
 }
