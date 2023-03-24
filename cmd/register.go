@@ -49,33 +49,6 @@ func (c *driftCommands) prepareCommands() *cobra.Command {
 	return rootCmd
 }
 
-func getDriftCommand() *cobra.Command {
-	driftCommand := &cobra.Command{
-		Use:   "run [RELEASE] [CHART] [flags]",
-		Short: "Identifies drifts from a selected chart/release",
-		Long:  "Lists all configuration drifts that are part of specified chart/release if exists.",
-		Example: `  helm drift run prometheus-standalone path/to/chart/prometheus-standalone -f ~/path/to/override-config.yaml
-  helm drift run prometheus-standalone --from-release`,
-		Args: minimumArgError,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			drifts.SetLogger(drifts.LogLevel)
-			drifts.SetWriter(os.Stdout)
-			cmd.SilenceUsage = true
-
-			drifts.SetRelease(args[0])
-			if !drifts.FromRelease {
-				drifts.SetChart(args[1])
-			}
-
-			return drifts.GetDrift()
-		},
-	}
-
-	registerRunFlags(driftCommand)
-
-	return driftCommand
-}
-
 func getRootCommand() *cobra.Command {
 	rootCommand := &cobra.Command{
 		Use:   "drift [command]",
@@ -102,6 +75,33 @@ func getVersionCommand() *cobra.Command {
 		Long:  `This will help user to find what version of helm-drift plugin he/she installed in her machine.`,
 		RunE:  versionConfig,
 	}
+}
+
+func getDriftCommand() *cobra.Command {
+	driftCommand := &cobra.Command{
+		Use:   "run [RELEASE] [CHART] [flags]",
+		Short: "Identifies drifts from a selected chart/release",
+		Long:  "Lists all configuration drifts that are part of specified chart/release if exists.",
+		Example: `  helm drift run prometheus-standalone path/to/chart/prometheus-standalone -f ~/path/to/override-config.yaml
+  helm drift run prometheus-standalone --from-release`,
+		Args: minimumArgError,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			drifts.SetLogger(drifts.LogLevel)
+			drifts.SetWriter(os.Stdout)
+			cmd.SilenceUsage = true
+
+			drifts.SetRelease(args[0])
+			if !drifts.FromRelease {
+				drifts.SetChart(args[1])
+			}
+
+			return drifts.GetDrift()
+		},
+	}
+
+	registerRunFlags(driftCommand)
+
+	return driftCommand
 }
 
 func versionConfig(cmd *cobra.Command, args []string) error {

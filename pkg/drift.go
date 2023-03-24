@@ -85,9 +85,11 @@ func (drift *Drift) GetDrift() error {
 	}
 
 	for file, diff := range out {
-		fmt.Println("----------------------------------------------------------------------------")
-		fmt.Printf("Identified drifts in: '%s' \n", file)
-		fmt.Println(diff)
+		drift.render(addNewLine("------------------------------------------------------------------------------------"))
+		drift.render(addNewLine(addNewLine(fmt.Sprintf("Identified drifts in: '%s'", file))))
+		drift.render(addNewLine("-----------"))
+		drift.render(diff)
+		drift.render(addNewLine(addNewLine("-----------")))
 	}
 
 	return nil
