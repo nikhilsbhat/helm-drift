@@ -31,6 +31,10 @@ func (drift *Drift) getChartFromTemplate() ([]byte, error) {
 		flags = append(flags, "--debug")
 	}
 
+	if drift.SkipTests {
+		flags = append(flags, "--skip-tests")
+	}
+
 	args := []string{"template", drift.release, drift.chart}
 	args = append(args, flags...)
 

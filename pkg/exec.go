@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
+
+	"k8s.io/client-go/util/homedir"
 )
 
 const (
@@ -16,8 +19,11 @@ const (
 )
 
 func (drift *Drift) kubeCmd(args ...string) *exec.Cmd {
-	cmd := exec.CommandContext(context.Background(), "kubectl", args...)
+	cmd := exec.CommandContext(context.Background(), "kubectl")
+	cmd.Args = append(cmd.Args, "diff")
+	cmd.Args = append(cmd.Args, args...)
 	cmd.Env = drift.getKubeEnvironments()
+
 	drift.log.Debugf("running command '%s' to find diff", cmd.String())
 
 	return cmd
@@ -28,6 +34,7 @@ func (drift *Drift) getKubeEnvironments() []string {
 	namespace := os.Getenv(helmNamespace)
 	config := os.Getenv(kubeConfig)
 
+	os.Environ()
 	var envs []string
 	if len(contexts) != 0 {
 		envs = append(envs, constructEnv(kubeContext, contexts))
@@ -37,7 +44,11 @@ func (drift *Drift) getKubeEnvironments() []string {
 	}
 	if len(config) != 0 {
 		envs = append(envs, constructEnv(kubeConfig, config))
+	} else {
+		envs = append(envs, constructEnv(kubeConfig, filepath.Join(homedir.HomeDir(), ".kube", "config")))
 	}
+
+	envs = append(envs, os.Environ()...)
 
 	return envs
 }

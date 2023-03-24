@@ -1,7 +1,6 @@
 package pkg
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"os"
@@ -24,25 +23,24 @@ func (drift *Drift) Diff() (map[string]string, error) {
 
 		drift.log.Debugf("calculating diff for %s", manifestPath)
 
-		arguments := []string{"diff", "-f", manifestPath}
+		arguments := []string{fmt.Sprintf("-f=%s", manifestPath)}
 		cmd := drift.kubeCmd(arguments...)
 
 		drift.log.Debugf("envionment variables that would be used: %v", cmd.Environ())
 
-		var output bytes.Buffer
-		cmd.Stdout = &output
-		if err = cmd.Run(); err != nil {
+		out, err := cmd.CombinedOutput()
+		if err != nil {
 			var exerr *exec.ExitError
 			if errors.As(err, &exerr) {
 				if exerr.ExitCode() != 1 {
-					return nil, fmt.Errorf("running kubectl diff errored with exit code: %w ,with message: %s", err, output.String())
+					return nil, fmt.Errorf("running kubectl diff errored with exit code: %w ,with message: %s", err, string(out))
 				}
 			}
 		}
 
-		if output.Len() != 0 {
+		if len(out) != 0 {
 			drift.log.Debugf("found diffs for %s", manifest.Name())
-			diffs[manifestPath] = output.String()
+			diffs[manifestPath] = string(out)
 		}
 	}
 

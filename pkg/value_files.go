@@ -12,6 +12,7 @@ func (v *ValueFiles) String() string {
 	return fmt.Sprint(*v)
 }
 
+//nolint:goerr113
 func (v *ValueFiles) Valid() error {
 	errStr := ""
 	for _, valuesFile := range *v {

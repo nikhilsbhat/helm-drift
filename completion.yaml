@@ -1,11 +1,11 @@
 name: drift
 flags:
+  - log-level
   - set
   - set-file
   - set-string
-  - values
-  - log-level
   - skip-tests
+  - values
 commands:
   - name: run
     flags:

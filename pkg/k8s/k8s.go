@@ -14,6 +14,7 @@ type NameInterface interface {
 	Get(dataMap string) (string, error)
 }
 
+//nolint:goerr113
 func (name *Name) Get(dataMap string) (string, error) {
 	var kindYaml map[string]interface{}
 	if err := yaml.Unmarshal([]byte(dataMap), &kindYaml); err != nil {

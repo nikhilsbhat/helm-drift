@@ -127,6 +127,7 @@ func versionConfig(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+//nolint:goerr113
 func minimumArgError(cmd *cobra.Command, args []string) error {
 	minArgError := errors.New("[RELEASE] or [CHART] cannot be empty")
 	oneOfThemError := errors.New("when '--from-release' is enabled, valid input is [RELEASE] and not both [RELEASE] [CHART]")
@@ -136,14 +137,14 @@ func minimumArgError(cmd *cobra.Command, args []string) error {
 		if len(args) != getArgumentCountLocal {
 			log.Println(minArgError)
 
-			return minArgError
+			return fmt.Errorf("%w", minArgError)
 		}
 
 		return nil
 	}
 
 	if len(args) > getArgumentCountRelease {
-		log.Fatalln(oneOfThemError)
+		log.Fatalln(fmt.Errorf("%w", oneOfThemError))
 	}
 
 	return nil
