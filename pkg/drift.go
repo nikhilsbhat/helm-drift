@@ -54,6 +54,10 @@ func (drift *Drift) SetWriter(writer io.Writer) {
 
 // GetDrift gets all the drifts that the given release/chart has.
 func (drift *Drift) GetDrift() error {
+	if err := drift.cleanManifests(true); err != nil {
+		drift.log.Fatalf("cleaning old rendered files failed with: %v", err)
+	}
+
 	if !drift.SkipValidation {
 		if !drift.validatePrerequisite() {
 			drift.log.Fatalf("validation failed, please install prerequisites to identify drifts")
@@ -79,7 +83,7 @@ func (drift *Drift) GetDrift() error {
 	}
 
 	defer func(drift *Drift) {
-		if err = drift.cleanManifests(); err != nil {
+		if err = drift.cleanManifests(false); err != nil {
 			drift.log.Fatalf("cleaning rendered files failed with: %v", err)
 		}
 	}(drift)

@@ -36,7 +36,7 @@ func (drift *Drift) renderToDisk(manifests []string) ([]Deviation, error) {
 
 		drift.log.Debugf("generating manifest %s", name)
 
-		manifestPath := filepath.Join(templatePath, fmt.Sprintf("%s.yaml", name))
+		manifestPath := filepath.Join(templatePath, fmt.Sprintf("%s.%s.yaml", name, kind))
 		if err = os.WriteFile(manifestPath, []byte(manifest), manifestFilePermission); err != nil {
 			return nil, err
 		}
@@ -55,10 +55,10 @@ func (drift *Drift) renderToDisk(manifests []string) ([]Deviation, error) {
 	return deviations, nil
 }
 
-func (drift *Drift) cleanManifests() error {
+func (drift *Drift) cleanManifests(force bool) error {
 	templatePath := filepath.Join(drift.TempPath, drift.release)
 
-	if !drift.SkipClean {
+	if !drift.SkipClean || force {
 		if err := os.RemoveAll(templatePath); err != nil {
 			return err
 		}
