@@ -38,16 +38,17 @@ func (drift *Drift) Diff(deviations []Deviation) ([]Deviation, error) {
 		if err != nil {
 			var exerr *exec.ExitError
 			if errors.As(err, &exerr) {
-				if exerr.ExitCode() != 1 {
+				switch exerr.ExitCode() {
+				case 1:
+					deviation.HasDrift = true
+					deviation.Deviations = string(out)
+					drift.log.Debugf("found diffs for '%s' with name '%s'", deviation.Kind, deviation.Kind)
+				default:
 					return nil, fmt.Errorf("running kubectl diff errored with exit code: %w ,with message: %s", err, string(out))
 				}
 			}
-		}
-
-		if len(out) != 0 {
-			drift.log.Debugf("found diffs for '%s' with name '%s'", deviation.Kind, deviation.Kind)
-			deviation.HasDrift = true
-			deviation.Deviations = string(out)
+		} else {
+			drift.log.Debugf("no diffs found for '%s' with name '%s'", deviation.Kind, deviation.Kind)
 		}
 		diffs = append(diffs, deviation)
 	}

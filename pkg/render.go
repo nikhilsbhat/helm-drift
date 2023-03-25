@@ -21,18 +21,26 @@ func (drift *Drift) toTABLE(drifts []Deviation) {
 	drift.log.Debug("rendering the drifts in table format since --summary is enabled")
 	table := drift.tableSchema()
 
+	var hasDrift bool
 	table.SetHeader([]string{"kind", "name", "drift"})
 	table.SetHeaderColor(tablewriter.Colors{tablewriter.Bold}, tablewriter.Colors{tablewriter.Bold}, tablewriter.Colors{tablewriter.Bold})
 
 	for _, dft := range drifts {
 		tableRow := []string{dft.Kind, dft.Resource, dft.hasDrift()}
 		if dft.HasDrift {
-			if !drift.NoColor {
+			hasDrift = true
+			switch !drift.NoColor {
+			case true:
 				table.Rich(tableRow, []tablewriter.Colors{{}, {}, {tablewriter.FgRedColor}})
+			default:
+				table.Append(tableRow)
 			}
 		} else {
-			if !drift.NoColor {
+			switch !drift.NoColor {
+			case true:
 				table.Rich(tableRow, []tablewriter.Colors{{}, {}, {tablewriter.FgGreenColor}})
+			default:
+				table.Append(tableRow)
 			}
 		}
 	}
@@ -49,17 +57,26 @@ func (drift *Drift) toTABLE(drifts []Deviation) {
 	}
 
 	table.Render()
+
+	if hasDrift {
+		os.Exit(1)
+	}
 }
 
 func (drift *Drift) print(drifts []Deviation) {
+	var hasDrift bool
 	for _, dft := range drifts {
 		if dft.HasDrift {
+			hasDrift = true
 			drift.write(addNewLine("------------------------------------------------------------------------------------"))
 			drift.write(addNewLine(addNewLine(fmt.Sprintf("Identified drifts in: '%s' '%s'", dft.Kind, dft.Resource))))
 			drift.write(addNewLine("-----------"))
 			drift.write(dft.Deviations)
 			drift.write(addNewLine(addNewLine("-----------")))
 		}
+	}
+	if !hasDrift {
+		drift.write(addNewLine("yay...! no drifts found"))
 	}
 }
 

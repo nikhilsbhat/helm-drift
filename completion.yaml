@@ -14,5 +14,6 @@ commands:
       - regex
       - skip-cleaning
       - skip-validation
+      - summary
       - temp-path
   - name: version
