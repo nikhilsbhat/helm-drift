@@ -24,89 +24,93 @@ This helm plugin is intended to solve the same problem by validating the resourc
 This leverages kubectl [diff](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#diff) to identify the drifts.
 
 ```shell
+# By enabling --summary would render drifts as quick summary in table format.
+helm drift run prometheus-standalone example/chart/sample/ -f ~/path/to/example/chart/sample/override-config.yaml --skip-cleaning --summary
+       KIND      |         NAME          | DRIFT
+-----------------|-----------------------|---------
+  ServiceAccount | sample                | NO
+  Service        | sample                | NO
+  DaemonSet      | fluentd-elasticsearch | NO
+  Pod            | nginx                 | NO
+  Pod            | nginx-2               | NO
+  ReplicaSet     | frontend              | NO
+  Deployment     | sample                | NO
+  StatefulSet    | web                   | YES
+  Job            | pi                    | NO
+  CronJob        | hello                 | NO
+-----------------|-----------------------|---------
+                          STATUS         | FAILED
+                 ------------------------|---------
+Namespace: 'sample' Release: 'sample'
+
+# Invoking command with out flag --summary would render detailed drifts.
 helm drift run prometheus-standalone example/chart/sample/ -f ~/path/to/example/chart/sample/override-config.yaml --skip-cleaning
 # executing above command would yield results something like below:
-diff -u -N /var/folders/dm/40_kbx_56psgqt29q0wh2cxh0000gq/T/LIVE-1282120558/batch.v1.Job.default.pi /var/folders/dm/40_kbx_56psgqt29q0wh2cxh0000gq/T/MERGED-3024449788/batch.v1.Job.default.pi
---- /var/folders/dm/40_kbx_56psgqt29q0wh2cxh0000gq/T/LIVE-1282120558/batch.v1.Job.default.pi	2023-03-23 12:01:36.000000000 +0530
-+++ /var/folders/dm/40_kbx_56psgqt29q0wh2cxh0000gq/T/MERGED-3024449788/batch.v1.Job.default.pi	2023-03-23 12:01:36.000000000 +0530
-@@ -0,0 +1,77 @@
-+apiVersion: batch/v1
-+kind: Job
-+metadata:
-+  annotations:
-+    batch.kubernetes.io/job-tracking: ""
-+  creationTimestamp: "2023-03-23T06:31:36Z"
-+  generation: 1
-+  labels:
-+    controller-uid: 8e325a1c-5e66-4abf-9f55-af4acf763b5c
-+    job-name: pi
-+  managedFields:
-+  - apiVersion: batch/v1
+------------------------------------------------------------------------------------
+Identified drifts in: 'StatefulSet' 'web'
+
+-----------
+diff -u -N /var/folders/dm/40_kbx_56psgqt29q0wh2cxh0000gq/T/LIVE-2873647491/apps.v1.StatefulSet.sample.web /var/folders/dm/40_kbx_56psgqt29q0wh2cxh0000gq/T/MERGED-4261927724/apps.v1.StatefulSet.sample.web
+--- /var/folders/dm/40_kbx_56psgqt29q0wh2cxh0000gq/T/LIVE-2873647491/apps.v1.StatefulSet.sample.web	2023-03-25 23:33:06.000000000 +0530
++++ /var/folders/dm/40_kbx_56psgqt29q0wh2cxh0000gq/T/MERGED-4261927724/apps.v1.StatefulSet.sample.web	2023-03-25 23:33:06.000000000 +0530
+@@ -5,7 +5,7 @@
+     meta.helm.sh/release-name: sample
+     meta.helm.sh/release-namespace: sample
+   creationTimestamp: "2023-03-24T06:15:02Z"
+-  generation: 2
++  generation: 3
+   labels:
+     app.kubernetes.io/managed-by: Helm
+   managedFields:
+@@ -84,7 +84,6 @@
+           f:spec:
+             f:containers:
+               k:{"name":"nginx"}:
+-                f:image: {}
+                 f:ports:
+                   k:{"containerPort":8080,"protocol":"TCP"}:
+                     .: {}
+@@ -94,6 +93,24 @@
+     manager: kubectl-edit
+     operation: Update
+     time: "2023-03-24T06:19:50Z"
++  - apiVersion: apps/v1
 +    fieldsType: FieldsV1
 +    fieldsV1:
 +      f:spec:
-+        f:backoffLimit: {}
-+        f:completionMode: {}
-+        f:completions: {}
-+        f:parallelism: {}
-+        f:suspend: {}
 +        f:template:
 +          f:spec:
 +            f:containers:
-+              k:{"name":"pi"}:
-+                .: {}
-+                f:command: {}
++              k:{"name":"nginx"}:
 +                f:image: {}
-+                f:imagePullPolicy: {}
-+                f:name: {}
-+                f:resources: {}
-+                f:terminationMessagePath: {}
-+                f:terminationMessagePolicy: {}
-+            f:dnsPolicy: {}
-+            f:restartPolicy: {}
-+            f:schedulerName: {}
-+            f:securityContext: {}
-+            f:terminationGracePeriodSeconds: {}
++                f:ports:
++                  k:{"containerPort":80,"protocol":"TCP"}:
++                    .: {}
++                    f:containerPort: {}
++                    f:name: {}
++                    f:protocol: {}
 +    manager: kubectl-client-side-apply
 +    operation: Update
-+    time: "2023-03-23T06:31:36Z"
-+  name: pi
-+  namespace: default
-+  uid: 8e325a1c-5e66-4abf-9f55-af4acf763b5c
-+spec:
-+  backoffLimit: 4
-+  completionMode: NonIndexed
-+  completions: 1
-+  parallelism: 1
-+  selector:
-+    matchLabels:
-+      controller-uid: 8e325a1c-5e66-4abf-9f55-af4acf763b5c
-+  suspend: false
-+  template:
-+    metadata:
-+      creationTimestamp: null
-+      labels:
-+        controller-uid: 8e325a1c-5e66-4abf-9f55-af4acf763b5c
-+        job-name: pi
-+    spec:
-+      containers:
-+      - command:
-+        - perl
-+        - -Mbignum=bpi
-+        - -wle
-+        - print bpi(2000)
-+        image: perl:5.34.0
-+        imagePullPolicy: IfNotPresent
-+        name: pi
-+        resources: {}
-+        terminationMessagePath: /dev/termination-log
-+        terminationMessagePolicy: File
-+      dnsPolicy: ClusterFirst
-+      restartPolicy: Never
-+      schedulerName: default-scheduler
-+      securityContext: {}
-+      terminationGracePeriodSeconds: 30
-+status: {}
++    time: "2023-03-25T18:03:05Z"
+   name: web
+   namespace: sample
+   resourceVersion: "14246"
+@@ -114,10 +131,13 @@
+         app: nginx
+     spec:
+       containers:
+-      - image: k8s.gcr.io/nginx-slim:0.9
++      - image: k8s.gcr.io/nginx-slim:0.8
+         imagePullPolicy: IfNotPresent
+         name: nginx
+         ports:
++        - containerPort: 80
++          name: web
++          protocol: TCP
+         - containerPort: 8080
+           name: web
+           protocol: TCP
+-----------
 ```
 ## Installation
 
