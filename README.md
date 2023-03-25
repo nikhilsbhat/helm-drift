@@ -16,13 +16,14 @@ The helm plugin that helps in identifying deviations(mostly due to in-place edit
 Kubernetes' resources can be deployed via package manager helm, it is easier to deploy but to manage the same require more effort.
 
 If helm is used, strictly all resources should be managed by helm itself, but there are places where manual interventions are needed.</br>
-This results in configuration drift from helm charts deployed.</br>
+This results in configuration drift from helm charts deployed.
 These changes can be overridden by next helm release, what if the required changes are lost before adding it back to helm chart?
 
 This helm plugin is intended to solve the same problem by validating the resources that are part of appropriate chart/release against kubernetes.
 
 This leverages kubectl [diff](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#diff) to identify the drifts.
 
+### Example
 ```shell
 # By enabling --summary would render drifts as quick summary in table format.
 helm drift run prometheus-standalone example/chart/sample/ -f ~/path/to/example/chart/sample/override-config.yaml --skip-cleaning --summary
@@ -170,10 +171,12 @@ Flags:
       --regex string       regex used to split helm template rendered (default "---\\n# Source:\\s.*.")
       --skip-cleaning      enable the flag to skip cleaning the manifests rendered on to disk
       --skip-validation    enable the flag if prerequisite validation needs to be skipped
+      --summary            if enabled, prints a quick summary in table format without printing actual drifts
       --temp-path string   path on disk where the helm templates would be rendered on to (the same would be used be used by 'kubectl diff') (default "/Users/nikhil.bhat/.helm-drift/templates")
 
 Global Flags:
   -l, --log-level string         log level for the plugin helm drift (defaults to info) (default "info")
+      --no-color                 enabling this would render summary with no color
       --set stringArray          set values on the command line (can specify multiple or separate values with commas: key1=val1,key2=val2)
       --set-file stringArray     set values from respective files specified via the command line (can specify multiple or separate values with commas: key1=path1,key2=path2)
       --set-string stringArray   set STRING values on the command line (can specify multiple or separate values with commas: key1=val1,key2=val2)
