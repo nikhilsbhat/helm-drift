@@ -10,6 +10,7 @@ DATE?=$(shell date)
 PlATFORM?=$(shell go env GOOS)
 ARCHITECTURE?=$(shell go env GOARCH)
 GOVERSION?=$(shell go version | awk '{printf $$3}')
+TEST_FILES?=$(shell go list ./... | grep -v /vendor/ | grep -v examples)
 BUILD_WITH_FLAGS="-s -w -X 'github.com/nikhilsbhat/helm-drift/version.Version=${VERSION}' -X 'github.com/nikhilsbhat/helm-drift/version.Env=${BUILD_ENVIRONMENT}' -X 'github.com/nikhilsbhat/helm-drift/version.BuildDate=${DATE}' -X 'github.com/nikhilsbhat/helm-drift/version.Revision=${REVISION}' -X 'github.com/nikhilsbhat/helm-drift/version.Platform=${PlATFORM}/${ARCHITECTURE}' -X 'github.com/nikhilsbhat/helm-drift/version.GoVersion=${GOVERSION}'"
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
@@ -33,8 +34,8 @@ local.check: local.fmt ## Loads all the dependencies to vendor directory
 	go mod vendor
 	go mod tidy
 
-local.build: local.check ## Generates the artifact with the help of 'go build'
-	GOVERSION=${GOVERSION} BUILD_ENVIRONMENT=${BUILD_ENVIRONMENT} goreleaser build --rm-dist
+build.local: local.check ## Generates the artifact with the help of 'go build'
+	@go build -o $(APP_NAME)_v$(VERSION) -ldflags="-s -w"
 
 local.push: local.build ## Pushes built artifact to the specified location
 
@@ -68,4 +69,4 @@ generate.document: ## generates cli documents using 'github.com/spf13/cobra/doc'
 	@go generate github.com/nikhilsbhat/helm-drift/docs
 
 test: ## runs test cases
-	go test ./... -mod=vendor -coverprofile cover.out
+	@time go test $(TEST_FILES) -mod=vendor -coverprofile cover.out && go tool cover -html=cover.out -o cover.html && open cover.html

@@ -3,23 +3,29 @@ package pkg
 import (
 	"errors"
 	"fmt"
-	"os"
 	"os/exec"
-	"path/filepath"
+
+	"github.com/thoas/go-funk"
 )
 
-func (drift *Drift) Diff() (map[string]string, error) {
-	templatePath := filepath.Join(drift.TempPath, drift.release)
+type Deviation struct {
+	Deviations   string
+	HasDrift     bool
+	Kind         string
+	Resource     string
+	TemplatePath string
+	ManifestPath string
+}
 
-	drift.log.Debugf("reading rendered manifsets under '%s' for calculating diff", templatePath)
-	manifests, err := os.ReadDir(templatePath)
-	if err != nil {
-		return nil, err
-	}
+const (
+	Failed  = "FAILED"
+	Success = "SUCCESS"
+)
 
-	diffs := make(map[string]string, 0)
-	for _, manifest := range manifests {
-		manifestPath := filepath.Join(templatePath, manifest.Name())
+func (drift *Drift) Diff(deviations []Deviation) ([]Deviation, error) {
+	diffs := make([]Deviation, 0)
+	for _, deviation := range deviations {
+		manifestPath := deviation.ManifestPath
 
 		drift.log.Debugf("calculating diff for %s", manifestPath)
 
@@ -39,12 +45,34 @@ func (drift *Drift) Diff() (map[string]string, error) {
 		}
 
 		if len(out) != 0 {
-			drift.log.Debugf("found diffs for %s", manifest.Name())
-			diffs[manifestPath] = string(out)
+			drift.log.Debugf("found diffs for '%s' with name '%s'", deviation.Kind, deviation.Kind)
+			deviation.HasDrift = true
+			deviation.Deviations = string(out)
 		}
+		diffs = append(diffs, deviation)
 	}
 
 	drift.log.Debug("ran diffs for all manifests successfully")
 
 	return diffs, nil
+}
+
+func (drift *Drift) status(drifts []Deviation) string {
+	hasDrift := funk.Contains(drifts, func(dft Deviation) bool {
+		return dft.HasDrift
+	})
+
+	if hasDrift {
+		return Failed
+	}
+
+	return Success
+}
+
+func (drift *Deviation) hasDrift() string {
+	if drift.HasDrift {
+		return "YES"
+	}
+
+	return "NO"
 }

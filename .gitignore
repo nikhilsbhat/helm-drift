@@ -13,6 +13,7 @@ vendor/
 
 # dropping local built binaries
 helm-drift
+helm-drift_*
 
 # dropping the templates
 templates-latest/

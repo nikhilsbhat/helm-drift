@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"os"
 
 	"github.com/sirupsen/logrus"
 )
@@ -23,28 +24,35 @@ type Drift struct {
 	SkipTests      bool
 	SkipValidation bool
 	SkipClean      bool
+	Summary        bool
 	Regex          string
 	LogLevel       string
 	FromRelease    bool
+	NoColor        bool
 	TempPath       string
 	release        string
 	chart          string
+	namespace      string
 	log            *logrus.Logger
 	writer         *bufio.Writer
 }
 
+// SetRelease sets release for helm drift.
 func (drift *Drift) SetRelease(release string) {
 	drift.release = release
 }
 
+// SetChart sets chart name for helm drift.
 func (drift *Drift) SetChart(chart string) {
 	drift.chart = chart
 }
 
+// SetWriter sets writer to be used by helm drift.
 func (drift *Drift) SetWriter(writer io.Writer) {
 	drift.writer = bufio.NewWriter(writer)
 }
 
+// GetDrift gets all the drifts that the given release/chart has.
 func (drift *Drift) GetDrift() error {
 	if !drift.SkipValidation {
 		if !drift.validatePrerequisite() {
@@ -56,6 +64,8 @@ func (drift *Drift) GetDrift() error {
 		fmt.Sprintf("got all required values to identify drifts from chart/release '%s' proceeding furter to fetch the same", drift.release),
 	)
 
+	drift.setNameSpace()
+
 	chart, err := drift.getChartManifests()
 	if err != nil {
 		return err
@@ -63,7 +73,8 @@ func (drift *Drift) GetDrift() error {
 
 	kubeKindTemplates := drift.getTemplates(chart)
 
-	if err = drift.renderToDisk(kubeKindTemplates); err != nil {
+	deviations, err := drift.renderToDisk(kubeKindTemplates)
+	if err != nil {
 		return err
 	}
 
@@ -73,7 +84,7 @@ func (drift *Drift) GetDrift() error {
 		}
 	}(drift)
 
-	out, err := drift.Diff()
+	out, err := drift.Diff(deviations)
 	if err != nil {
 		return err
 	}
@@ -84,13 +95,7 @@ func (drift *Drift) GetDrift() error {
 		return nil
 	}
 
-	for file, diff := range out {
-		drift.render(addNewLine("------------------------------------------------------------------------------------"))
-		drift.render(addNewLine(addNewLine(fmt.Sprintf("Identified drifts in: '%s'", file))))
-		drift.render(addNewLine("-----------"))
-		drift.render(diff)
-		drift.render(addNewLine(addNewLine("-----------")))
-	}
+	drift.render(out)
 
 	return nil
 }
@@ -105,4 +110,8 @@ func (drift *Drift) getChartManifests() ([]byte, error) {
 	drift.log.Debug(fmt.Sprintf("fetching manifests for '%s' by rendering helm template locally", drift.release))
 
 	return drift.getChartFromTemplate()
+}
+
+func (drift *Drift) setNameSpace() {
+	drift.namespace = os.Getenv(helmNamespace)
 }

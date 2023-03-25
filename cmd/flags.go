@@ -22,6 +22,8 @@ func registerFlags(cmd *cobra.Command) {
 		"setting this would set '--skip-tests' for helm template command while generating templates")
 	cmd.PersistentFlags().StringVarP(&drifts.LogLevel, "log-level", "l", "info",
 		"log level for the plugin helm drift (defaults to info)")
+	cmd.PersistentFlags().BoolVarP(&drifts.NoColor, "no-color", "", false,
+		"enabling this would render summary with no color")
 }
 
 // Registers all flags to command, get.
@@ -36,4 +38,6 @@ func registerRunFlags(cmd *cobra.Command) {
 		"enable the flag if prerequisite validation needs to be skipped")
 	cmd.PersistentFlags().BoolVarP(&drifts.SkipClean, "skip-cleaning", "", false,
 		"enable the flag to skip cleaning the manifests rendered on to disk")
+	cmd.PersistentFlags().BoolVarP(&drifts.Summary, "summary", "", false,
+		"if enabled, prints a quick summary in table format without printing actual drifts")
 }

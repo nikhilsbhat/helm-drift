@@ -3,9 +3,11 @@ module github.com/nikhilsbhat/helm-drift
 go 1.19
 
 require (
+	github.com/olekukonko/tablewriter v0.0.5
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.8.1
+	github.com/thoas/go-funk v0.9.3
 	gopkg.in/yaml.v3 v3.0.1
 	helm.sh/helm/v3 v3.11.2
 	k8s.io/client-go v0.26.0

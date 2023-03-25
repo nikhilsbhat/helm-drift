@@ -1,6 +1,7 @@
 name: drift
 flags:
   - log-level
+  - no-color
   - set
   - set-file
   - set-string
