@@ -8,10 +8,6 @@ function verlt() {
   [ "$1" = "$2" ] && return 1 || verlte $1 $2
 }
 
-function isOld() {
-  verlte $1 $2 && echo "yes" || echo "no"
-}
-
 function exit_trap() {
   result=$?
   if [ "$result" != "0" ]; then
@@ -26,14 +22,10 @@ function download_plugin() {
 
   OUTPUT_BASENAME=helm-drift
   version=$(grep version "$HELM_PLUGIN_DIR/plugin.yaml" | cut -d'"' -f2)
-  old=$(isOld "$version" "0.0.5")
-  if [ "$old" == "yes" ]; then
-    DOWNLOAD_URL="https://github.com/nikhilsbhat/helm-drift/releases/download/v$version/helm-drift_${version}_${osName}_${osArch}.zip"
-    OUTPUT_BASENAME_WITH_POSTFIX="$HELM_PLUGIN_DIR/$OUTPUT_BASENAME.zip"
-  else
-    DOWNLOAD_URL="https://github.com/nikhilsbhat/helm-drift/releases/download/v$version/helm-drift_${version}_${osName}_${osArch}.tar.gz"
-    OUTPUT_BASENAME_WITH_POSTFIX="$HELM_PLUGIN_DIR/$OUTPUT_BASENAME.tar.gz"
-  fi
+
+  DOWNLOAD_URL="https://github.com/nikhilsbhat/helm-drift/releases/download/v$version/helm-drift_${version}_${osName}_${osArch}.tar.gz"
+  OUTPUT_BASENAME_WITH_POSTFIX="$HELM_PLUGIN_DIR/$OUTPUT_BASENAME.tar.gz"
+
 
   echo -e "download url set to ${DOWNLOAD_URL}\n"
   echo -e "artifact name with path ${OUTPUT_BASENAME_WITH_POSTFIX}\n"
