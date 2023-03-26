@@ -6,8 +6,7 @@
 [![shields](https://godoc.org/github.com/nikhilsbhat/helm-drift?status.svg)](https://godoc.org/github.com/nikhilsbhat/helm-drift)
 [![shields](https://img.shields.io/github/v/tag/nikhilsbhat/helm-drift.svg)](https://github.com/nikhilsbhat/helm-drift/tags)
 [![shields](https://img.shields.io/github/downloads/nikhilsbhat/helm-drift/total.svg)](https://github.com/nikhilsbhat/helm-drift/releases)
-[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/drift)](https://artifacthub.io/packages/search?repo=drift)
-
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/helm-drift)](https://artifacthub.io/packages/search?repo=helm-drift)
 
 The helm plugin that helps in identifying deviations(mostly due to in-place edits) in the configurations that are deployed via helm chart.
 
