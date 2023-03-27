@@ -147,9 +147,10 @@ func (drift *Drift) print(drifts []Deviation) {
 	if !hasDrift {
 		drift.write(addNewLine("YAY...! NO DRIFTS FOUND"))
 	}
-	drift.write(addNewLine(fmt.Sprintf("Total time spent on identifying drifts: %v", drift.timeSpent)))
-	drift.write(addNewLine(fmt.Sprintf("Release: %s\nChart: %s", drift.release, drift.chart)))
-	drift.write(addNewLine(fmt.Sprintf("Status: %s", drift.status(drifts))))
+	drift.write(addNewLine(fmt.Sprintf("Release                                : %s\nChart                                  : %s", drift.release, drift.chart)))
+	drift.write(addNewLine(fmt.Sprintf("Total time spent on identifying drifts : %v", drift.timeSpent)))
+	drift.write(addNewLine(fmt.Sprintf("Total number of drifts found           : %v", drift.driftCount(drifts))))
+	drift.write(addNewLine(fmt.Sprintf("Status                                 : %s", drift.status(drifts))))
 }
 
 func (drift *Drift) write(data string) {
