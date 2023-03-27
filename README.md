@@ -186,3 +186,12 @@ Global Flags:
 ## Documentation
 
 Updated documentation on all available commands and flags can be found [here](https://github.com/nikhilsbhat/helm-drift/blob/master/docs/doc/drift.md).
+
+## Caveats
+
+Identifying drifts on `CRD`'s would be tricky, plugin might not respond with correct data.
+
+If helm hooks defined in chart, one might find drifts always on helm hooks which is marked with `hook-succeeded` and `hook-failed` when identifying drifts from charts.</br>
+Things would work perfectly when identifying drifts from installed release.
+
+Support for adding a `flag` to skip helm `hooks` if required is under development.
