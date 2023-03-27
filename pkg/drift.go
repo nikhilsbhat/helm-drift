@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"github.com/sirupsen/logrus"
 )
@@ -29,10 +30,15 @@ type Drift struct {
 	LogLevel       string
 	FromRelease    bool
 	NoColor        bool
+	JSON           bool
+	YAML           bool
+	ExitWithError  bool
+	Report         bool
 	TempPath       string
 	release        string
 	chart          string
 	namespace      string
+	timeSpent      float64
 	log            *logrus.Logger
 	writer         *bufio.Writer
 }
@@ -54,6 +60,8 @@ func (drift *Drift) SetWriter(writer io.Writer) {
 
 // GetDrift gets all the drifts that the given release/chart has.
 func (drift *Drift) GetDrift() error {
+	startTime := time.Now()
+
 	if err := drift.cleanManifests(true); err != nil {
 		drift.log.Fatalf("cleaning old rendered files failed with: %v", err)
 	}
@@ -99,9 +107,9 @@ func (drift *Drift) GetDrift() error {
 		return nil
 	}
 
-	drift.render(out)
+	drift.timeSpent = time.Since(startTime).Seconds()
 
-	return nil
+	return drift.render(out)
 }
 
 func (drift *Drift) getChartManifests() ([]byte, error) {

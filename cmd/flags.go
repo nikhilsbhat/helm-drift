@@ -40,4 +40,12 @@ func registerRunFlags(cmd *cobra.Command) {
 		"enable the flag to skip cleaning the manifests rendered on to disk")
 	cmd.PersistentFlags().BoolVarP(&drifts.Summary, "summary", "", false,
 		"if enabled, prints a quick summary in table format without printing actual drifts")
+	cmd.PersistentFlags().BoolVarP(&drifts.JSON, "json", "j", false,
+		"enable the flag to render drifts in json format (disabled by default)")
+	cmd.PersistentFlags().BoolVarP(&drifts.YAML, "yaml", "y", false,
+		"enable the flag to render drifts in yaml format (disabled by default)")
+	cmd.PersistentFlags().BoolVarP(&drifts.ExitWithError, "disable-error-on-drift", "d", false,
+		"enabling this would disable exiting with error if drifts were identified (works only when --summary is enabled)")
+	cmd.PersistentFlags().BoolVarP(&drifts.Report, "report", "", false,
+		"when enabled the summary report would be rendered on to a file (this works only if --yaml or --json is enabled along with summary)")
 }

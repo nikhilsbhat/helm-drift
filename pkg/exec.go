@@ -56,7 +56,7 @@ func constructEnv(key, value string) string {
 func setContext() string {
 	kubeContext := os.Getenv(helmContext)
 	if len(kubeContext) != 0 {
-		return fmt.Sprintf("--kube-context=%s", kubeContext)
+		return fmt.Sprintf("--context=%s", kubeContext)
 	}
 
 	return kubeContext

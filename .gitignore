@@ -26,3 +26,7 @@ cover.html
 
 # dropping all local builds generated for testing
 bin/
+
+# dropping the artifacts that the plugin generates
+helm_drift_*.json
+helm_drift_*.yaml

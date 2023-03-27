@@ -2,19 +2,33 @@ package pkg
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/olekukonko/tablewriter"
+	"gopkg.in/yaml.v3"
 )
 
-func (drift *Drift) render(drifts []Deviation) {
+func (drift *Drift) render(drifts []Deviation) error {
 	if drift.Summary {
+		if drift.JSON {
+			return drift.toJSON(drifts)
+		}
+
+		if drift.YAML {
+			return drift.toYAML(drifts)
+		}
+
 		drift.toTABLE(drifts)
 
-		return
+		return nil
 	}
 	drift.print(drifts)
+
+	return nil
 }
 
 func (drift *Drift) toTABLE(drifts []Deviation) {
@@ -57,10 +71,65 @@ func (drift *Drift) toTABLE(drifts []Deviation) {
 	}
 
 	table.Render()
+	drift.write(addNewLine(fmt.Sprintf("Time spent in identifying drift: '%v'\n", drift.timeSpent)))
 
-	if hasDrift {
+	if hasDrift && !drift.ExitWithError {
 		os.Exit(1)
 	}
+}
+
+func (drift *Drift) toYAML(drifts []Deviation) error {
+	drift.log.Debug("rendering the images in yaml format since --yaml is enabled")
+
+	driftMap := drift.getDriftMap(drifts)
+
+	kindYAML, err := yaml.Marshal(driftMap)
+	if err != nil {
+		return err
+	}
+
+	yamlString := strings.Join([]string{"---", string(kindYAML)}, "\n")
+
+	_, err = drift.writer.Write([]byte(yamlString))
+	if err != nil {
+		drift.log.Fatalln(err)
+	}
+
+	defer func(writer *bufio.Writer) {
+		err = writer.Flush()
+		if err != nil {
+			drift.log.Fatalln(err)
+		}
+	}(drift.writer)
+
+	return drift.generateReport(kindYAML, "yaml")
+}
+
+func (drift *Drift) toJSON(drifts []Deviation) error {
+	drift.log.Debug("rendering the images in json format since --json is enabled")
+
+	driftMap := drift.getDriftMap(drifts)
+
+	kindJSON, err := json.MarshalIndent(driftMap, " ", " ")
+	if err != nil {
+		return err
+	}
+
+	kindJSON = append(kindJSON, []byte("\n")...)
+
+	_, err = drift.writer.Write(kindJSON)
+	if err != nil {
+		drift.log.Fatalln(err)
+	}
+
+	defer func(writer *bufio.Writer) {
+		err = writer.Flush()
+		if err != nil {
+			drift.log.Fatalln(err)
+		}
+	}(drift.writer)
+
+	return drift.generateReport(kindJSON, "json")
 }
 
 func (drift *Drift) print(drifts []Deviation) {
@@ -76,8 +145,11 @@ func (drift *Drift) print(drifts []Deviation) {
 		}
 	}
 	if !hasDrift {
-		drift.write(addNewLine("yay...! no drifts found"))
+		drift.write(addNewLine("YAY...! NO DRIFTS FOUND"))
 	}
+	drift.write(addNewLine(fmt.Sprintf("Total time spent on identifying drifts: %v", drift.timeSpent)))
+	drift.write(addNewLine(fmt.Sprintf("Release: %s\nChart: %s", drift.release, drift.chart)))
+	drift.write(addNewLine(fmt.Sprintf("Status: %s", drift.status(drifts))))
 }
 
 func (drift *Drift) write(data string) {
@@ -119,4 +191,23 @@ func (drift *Drift) tableSchema() *tablewriter.Table {
 
 func (drift *Drift) getCaption() string {
 	return fmt.Sprintf("Namespace: '%s'\nRelease: '%s'", drift.namespace, drift.release)
+}
+
+func (drift *Drift) generateReport(data []byte, fileType string) error {
+	if !drift.Report {
+		drift.log.Debug("--report was not enabled, not generating summary report")
+
+		return nil
+	}
+
+	pwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
+	reportName := filepath.Join(pwd, fmt.Sprintf("helm_drift_%s.%s", drift.release, fileType))
+
+	drift.log.Debugf("generating summary report as '%s' since --report is enabled", reportName)
+
+	return os.WriteFile(reportName, data, manifestFilePermission)
 }

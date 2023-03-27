@@ -77,3 +77,25 @@ func (drift *Deviation) hasDrift() string {
 
 	return "NO"
 }
+
+func (drift *Drift) getDriftMap(drifts []Deviation) map[string]interface{} {
+	return map[string]interface{}{
+		"drifts":       drifts,
+		"total_drifts": drift.driftCount(drifts),
+		"time":         fmt.Sprintf("%v", drift.timeSpent),
+		"release":      drift.release,
+		"chart":        drift.chart,
+		"status":       drift.status(drifts),
+	}
+}
+
+func (drift *Drift) driftCount(drifts []Deviation) int {
+	var count int
+	for _, dft := range drifts {
+		if dft.HasDrift {
+			count++
+		}
+	}
+
+	return count
+}

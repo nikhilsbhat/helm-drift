@@ -10,10 +10,14 @@ flags:
 commands:
   - name: run
     flags:
+      - disable-error-on-drift
       - from-release
+      - json
       - regex
+      - report
       - skip-cleaning
       - skip-validation
       - summary
       - temp-path
+      - yaml
   - name: version
