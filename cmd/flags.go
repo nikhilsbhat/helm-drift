@@ -48,4 +48,7 @@ func registerRunFlags(cmd *cobra.Command) {
 		"enabling this would disable exiting with error if drifts were identified (works only when --summary is enabled)")
 	cmd.PersistentFlags().BoolVarP(&drifts.Report, "report", "", false,
 		"when enabled the summary report would be rendered on to a file (this works only if --yaml or --json is enabled along with summary)")
+	cmd.PersistentFlags().StringVarP(&drifts.CustomDiff, "custom-diff", "", "",
+		"custom diff command to use instead of default, the command passed here would be set under `KUBECTL_EXTERNAL_DIFF`."+
+			"More information can be found here https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#diff")
 }

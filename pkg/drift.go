@@ -35,6 +35,7 @@ type Drift struct {
 	ExitWithError  bool
 	Report         bool
 	TempPath       string
+	CustomDiff     string
 	release        string
 	chart          string
 	namespace      string
@@ -77,6 +78,9 @@ func (drift *Drift) GetDrift() error {
 	)
 
 	drift.setNameSpace()
+	if err := drift.setExternalDiff(); err != nil {
+		return err
+	}
 
 	chart, err := drift.getChartManifests()
 	if err != nil {
@@ -126,4 +130,12 @@ func (drift *Drift) getChartManifests() ([]byte, error) {
 
 func (drift *Drift) setNameSpace() {
 	drift.namespace = os.Getenv(helmNamespace)
+}
+
+func (drift *Drift) setExternalDiff() error {
+	if len(drift.CustomDiff) == 0 {
+		return nil
+	}
+
+	return os.Setenv("KUBECTL_EXTERNAL_DIFF", drift.CustomDiff)
 }
