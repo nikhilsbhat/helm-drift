@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/nikhilsbhat/helm-drift/pkg/errors"
 	"github.com/nikhilsbhat/helm-drift/version"
 	"github.com/spf13/cobra"
 )
@@ -40,7 +41,7 @@ func getVersionCommand() *cobra.Command {
 	}
 }
 
-func getDriftCommand() *cobra.Command {
+func getRunCommand() *cobra.Command {
 	driftCommand := &cobra.Command{
 		Use:   "run [RELEASE] [CHART] [flags]",
 		Short: "Identifies drifts from a selected chart/release",
@@ -58,11 +59,49 @@ func getDriftCommand() *cobra.Command {
 				drifts.SetChart(args[1])
 			}
 
+			if !drifts.SkipValidation {
+				if !drifts.ValidatePrerequisite() {
+					return &errors.PreValidationError{Message: "validation failed, please install prerequisites to identify drifts"}
+				}
+			}
+
 			return drifts.GetDrift()
 		},
 	}
 
-	registerRunFlags(driftCommand)
+	registerCommonFlags(driftCommand)
+	registerDriftFlags(driftCommand)
+
+	return driftCommand
+}
+
+func getAllCommand() *cobra.Command {
+	driftCommand := &cobra.Command{
+		Use:   "all",
+		Short: "Identifies drifts from all release from the cluster",
+		Long:  "Lists all configuration drifts that are part of various releases present in the cluster.",
+		Example: `  helm drift all --kube-context k3d-sample
+helm drift all --kube-context k3d-sample -n sample`,
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			drifts.SetLogger(drifts.LogLevel)
+			drifts.SetWriter(os.Stdout)
+			cmd.SilenceUsage = true
+
+			if !drifts.SkipValidation {
+				if !drifts.ValidatePrerequisite() {
+					return &errors.PreValidationError{Message: "validation failed, please install prerequisites to identify drifts"}
+				}
+			}
+
+			drifts.All = true
+
+			return drifts.GetAllDrift()
+		},
+	}
+
+	registerCommonFlags(driftCommand)
+	registerDriftAllFlags(driftCommand)
 
 	return driftCommand
 }

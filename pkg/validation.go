@@ -5,7 +5,7 @@ import (
 	"os/exec"
 )
 
-func (drift *Drift) validatePrerequisite() bool {
+func (drift *Drift) ValidatePrerequisite() bool {
 	success := true
 	if goPath := exec.Command("go"); goPath.Err != nil {
 		if !errors.Is(goPath.Err, exec.ErrDot) {

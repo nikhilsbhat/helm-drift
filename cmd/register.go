@@ -28,7 +28,8 @@ func SetDriftCommands() *cobra.Command {
 // Add an entry in below function to register new command.
 func getDriftCommands() *cobra.Command {
 	command := new(driftCommands)
-	command.commands = append(command.commands, getDriftCommand())
+	command.commands = append(command.commands, getRunCommand())
+	command.commands = append(command.commands, getAllCommand())
 	command.commands = append(command.commands, getVersionCommand())
 
 	return command.prepareCommands()

@@ -8,11 +8,12 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/nikhilsbhat/helm-drift/pkg/deviation"
 	"github.com/olekukonko/tablewriter"
 	"gopkg.in/yaml.v3"
 )
 
-func (drift *Drift) render(drifts []Deviation) error {
+func (drift *Drift) render(drifts []deviation.DriftedReleases) error {
 	if drift.Summary {
 		if drift.JSON {
 			return drift.toJSON(drifts)
@@ -31,7 +32,9 @@ func (drift *Drift) render(drifts []Deviation) error {
 	return nil
 }
 
-func (drift *Drift) toTABLE(drifts []Deviation) {
+func (drift *Drift) toTABLE(drifts []deviation.DriftedReleases) {
+	drfts := drifts[0]
+	deviations := deviation.Deviations(drfts.Deviations)
 	drift.log.Debug("rendering the drifts in table format since --summary is enabled")
 	table := drift.tableSchema()
 
@@ -39,8 +42,8 @@ func (drift *Drift) toTABLE(drifts []Deviation) {
 	table.SetHeader([]string{"kind", "name", "drift"})
 	table.SetHeaderColor(tablewriter.Colors{tablewriter.Bold}, tablewriter.Colors{tablewriter.Bold}, tablewriter.Colors{tablewriter.Bold})
 
-	for _, dft := range drifts {
-		tableRow := []string{dft.Kind, dft.Resource, dft.hasDrift()}
+	for _, dft := range drfts.Deviations {
+		tableRow := []string{dft.Kind, dft.Resource, dft.Drifted()}
 		if dft.HasDrift {
 			hasDrift = true
 			switch !drift.NoColor {
@@ -59,11 +62,11 @@ func (drift *Drift) toTABLE(drifts []Deviation) {
 		}
 	}
 
-	table.SetFooter([]string{"", "Status", drift.status(drifts)})
+	table.SetFooter([]string{"", "Status", deviations.Status()})
 	table.SetCaption(true, drift.getCaption())
 
 	if !drift.NoColor {
-		if drift.status(drifts) == Failed {
+		if deviations.Status() == deviation.Failed {
 			table.SetFooterColor(tablewriter.Colors{}, tablewriter.Colors{tablewriter.Bold}, tablewriter.Colors{tablewriter.FgRedColor})
 		} else {
 			table.SetFooterColor(tablewriter.Colors{}, tablewriter.Colors{tablewriter.Bold}, tablewriter.Colors{tablewriter.FgGreenColor})
@@ -78,12 +81,18 @@ func (drift *Drift) toTABLE(drifts []Deviation) {
 	}
 }
 
-func (drift *Drift) toYAML(drifts []Deviation) error {
+func (drift *Drift) toYAML(drifts []deviation.DriftedReleases) error {
 	drift.log.Debug("rendering the images in yaml format since --yaml is enabled")
 
-	driftMap := drift.getDriftMap(drifts)
+	driftMaps := make([]map[string]interface{}, 0)
 
-	kindYAML, err := yaml.Marshal(driftMap)
+	for _, dft := range drifts {
+		deviations := deviation.Deviations(dft.Deviations)
+		driftMap := deviations.GetDriftAsMap(drift.chart, drift.release, fmt.Sprintf("%v", drift.timeSpent))
+		driftMaps = append(driftMaps, driftMap)
+	}
+
+	kindYAML, err := yaml.Marshal(driftMaps)
 	if err != nil {
 		return err
 	}
@@ -105,12 +114,18 @@ func (drift *Drift) toYAML(drifts []Deviation) error {
 	return drift.generateReport(kindYAML, "yaml")
 }
 
-func (drift *Drift) toJSON(drifts []Deviation) error {
+func (drift *Drift) toJSON(drifts []deviation.DriftedReleases) error {
 	drift.log.Debug("rendering the images in json format since --json is enabled")
 
-	driftMap := drift.getDriftMap(drifts)
+	driftMaps := make([]map[string]interface{}, 0)
 
-	kindJSON, err := json.MarshalIndent(driftMap, " ", " ")
+	for _, dft := range drifts {
+		deviations := deviation.Deviations(dft.Deviations)
+		driftMap := deviations.GetDriftAsMap(drift.chart, drift.release, fmt.Sprintf("%v", drift.timeSpent))
+		driftMaps = append(driftMaps, driftMap)
+	}
+
+	kindJSON, err := json.MarshalIndent(driftMaps, " ", " ")
 	if err != nil {
 		return err
 	}
@@ -132,9 +147,11 @@ func (drift *Drift) toJSON(drifts []Deviation) error {
 	return drift.generateReport(kindJSON, "json")
 }
 
-func (drift *Drift) print(drifts []Deviation) {
+func (drift *Drift) print(drifts []deviation.DriftedReleases) {
+	drfts := drifts[0]
+	deviations := deviation.Deviations(drfts.Deviations)
 	var hasDrift bool
-	for _, dft := range drifts {
+	for _, dft := range drfts.Deviations {
 		if dft.HasDrift {
 			hasDrift = true
 			drift.write(addNewLine("------------------------------------------------------------------------------------"))
@@ -149,8 +166,8 @@ func (drift *Drift) print(drifts []Deviation) {
 	}
 	drift.write(addNewLine(fmt.Sprintf("Release                                : %s\nChart                                  : %s", drift.release, drift.chart)))
 	drift.write(addNewLine(fmt.Sprintf("Total time spent on identifying drifts : %v", drift.timeSpent)))
-	drift.write(addNewLine(fmt.Sprintf("Total number of drifts found           : %v", drift.driftCount(drifts))))
-	drift.write(addNewLine(fmt.Sprintf("Status                                 : %s", drift.status(drifts))))
+	drift.write(addNewLine(fmt.Sprintf("Total number of drifts found           : %v", deviations.Count())))
+	drift.write(addNewLine(fmt.Sprintf("Status                                 : %s", deviations.Status())))
 }
 
 func (drift *Drift) write(data string) {
@@ -173,7 +190,7 @@ func addNewLine(message string) string {
 
 //nolint:nosnakecase
 func (drift *Drift) tableSchema() *tablewriter.Table {
-	table := tablewriter.NewWriter(os.Stdout)
+	table := tablewriter.NewWriter(drift.writer)
 	table.SetAutoFormatHeaders(true)
 	table.SetHeaderAlignment(tablewriter.ALIGN_CENTER)
 	table.SetColMinWidth(1, 1)
@@ -207,6 +224,9 @@ func (drift *Drift) generateReport(data []byte, fileType string) error {
 	}
 
 	reportName := filepath.Join(pwd, fmt.Sprintf("helm_drift_%s.%s", drift.release, fileType))
+	if drift.All {
+		reportName = filepath.Join(pwd, fmt.Sprintf("helm_drift_%s.%s", drift.release, fileType))
+	}
 
 	drift.log.Debugf("generating summary report as '%s' since --report is enabled", reportName)
 

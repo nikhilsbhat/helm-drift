@@ -2,11 +2,13 @@ package pkg
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"os"
+	"strings"
 	"time"
 
+	"github.com/nikhilsbhat/helm-drift/pkg/command"
+	"github.com/nikhilsbhat/helm-drift/pkg/deviation"
 	"github.com/sirupsen/logrus"
 )
 
@@ -18,30 +20,32 @@ const (
 
 // Drift represents GetDrift.
 type Drift struct {
-	Values         []string
-	StringValues   []string
-	FileValues     []string
-	ValueFiles     ValueFiles
-	SkipTests      bool
-	SkipValidation bool
-	SkipClean      bool
-	Summary        bool
-	Regex          string
-	LogLevel       string
-	FromRelease    bool
-	NoColor        bool
-	JSON           bool
-	YAML           bool
-	ExitWithError  bool
-	Report         bool
-	TempPath       string
-	CustomDiff     string
-	release        string
-	chart          string
-	namespace      string
-	timeSpent      float64
-	log            *logrus.Logger
-	writer         *bufio.Writer
+	Values             []string
+	StringValues       []string
+	FileValues         []string
+	ValueFiles         ValueFiles
+	SkipTests          bool
+	SkipValidation     bool
+	SkipClean          bool
+	Summary            bool
+	Regex              string
+	LogLevel           string
+	FromRelease        bool
+	NoColor            bool
+	JSON               bool
+	YAML               bool
+	ExitWithError      bool
+	Report             bool
+	TempPath           string
+	CustomDiff         string
+	All                bool
+	IsDefaultNamespace bool
+	release            string
+	chart              string
+	namespace          string
+	timeSpent          float64
+	log                *logrus.Logger
+	writer             *bufio.Writer
 }
 
 // SetRelease sets release for helm drift.
@@ -67,15 +71,7 @@ func (drift *Drift) GetDrift() error {
 		drift.log.Fatalf("cleaning old rendered files failed with: %v", err)
 	}
 
-	if !drift.SkipValidation {
-		if !drift.validatePrerequisite() {
-			drift.log.Fatalf("validation failed, please install prerequisites to identify drifts")
-		}
-	}
-
-	drift.log.Debug(
-		fmt.Sprintf("got all required values to identify drifts from chart/release '%s' proceeding furter to fetch the same", drift.release),
-	)
+	drift.log.Debugf("got all required values to identify drifts from chart/release '%s' proceeding furter to fetch the same", drift.release)
 
 	drift.setNameSpace()
 	if err := drift.setExternalDiff(); err != nil {
@@ -89,7 +85,7 @@ func (drift *Drift) GetDrift() error {
 
 	kubeKindTemplates := drift.getTemplates(chart)
 
-	deviations, err := drift.renderToDisk(kubeKindTemplates)
+	deviations, err := drift.renderToDisk(kubeKindTemplates, drift.release, drift.namespace)
 	if err != nil {
 		return err
 	}
@@ -100,36 +96,39 @@ func (drift *Drift) GetDrift() error {
 		}
 	}(drift)
 
+	var driftedReleases []deviation.DriftedReleases
 	out, err := drift.Diff(deviations)
 	if err != nil {
 		return err
 	}
 
-	if len(out) == 0 {
+	if len(out.Deviations) == 0 {
 		drift.log.Info("no drifts were identified")
 
 		return nil
 	}
 
+	driftedReleases = append(driftedReleases, out)
+
 	drift.timeSpent = time.Since(startTime).Seconds()
 
-	return drift.render(out)
+	return drift.render(driftedReleases)
 }
 
 func (drift *Drift) getChartManifests() ([]byte, error) {
 	if drift.FromRelease {
-		drift.log.Debug(fmt.Sprintf("from-release is selected, hence fetching manifests for '%s' from helm release", drift.release))
+		drift.log.Debugf("from-release is selected, hence fetching manifests for '%s' from helm release", drift.release)
 
 		return drift.getChartFromRelease()
 	}
 
-	drift.log.Debug(fmt.Sprintf("fetching manifests for '%s' by rendering helm template locally", drift.release))
+	drift.log.Debugf("fetching manifests for '%s' by rendering helm template locally", drift.release)
 
 	return drift.getChartFromTemplate()
 }
 
 func (drift *Drift) setNameSpace() {
-	drift.namespace = os.Getenv(helmNamespace)
+	drift.namespace = strings.TrimSpace(os.Getenv(command.HelmNamespace))
 }
 
 func (drift *Drift) setExternalDiff() error {

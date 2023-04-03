@@ -26,14 +26,12 @@ func registerFlags(cmd *cobra.Command) {
 		"enabling this would render summary with no color")
 }
 
-// Registers all flags to command, get.
-func registerRunFlags(cmd *cobra.Command) {
+// Registers flags to support command run/all.
+func registerCommonFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&drifts.Regex, "regex", "", pkg.TemplateRegex,
 		"regex used to split helm template rendered")
 	cmd.PersistentFlags().StringVarP(&drifts.TempPath, "temp-path", "", filepath.Join(homedir.HomeDir(), ".helm-drift", "templates"),
 		"path on disk where the helm templates would be rendered on to (the same would be used be used by 'kubectl diff')")
-	cmd.PersistentFlags().BoolVarP(&drifts.FromRelease, "from-release", "", false,
-		"enable the flag to identify drifts from a release instead (disabled by default)")
 	cmd.PersistentFlags().BoolVarP(&drifts.SkipValidation, "skip-validation", "", false,
 		"enable the flag if prerequisite validation needs to be skipped")
 	cmd.PersistentFlags().BoolVarP(&drifts.SkipClean, "skip-cleaning", "", false,
@@ -51,4 +49,16 @@ func registerRunFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&drifts.CustomDiff, "custom-diff", "", "",
 		"custom diff command to use instead of default, the command passed here would be set under `KUBECTL_EXTERNAL_DIFF`."+
 			"More information can be found here https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#diff")
+}
+
+// Registers flags specific to command, run.
+func registerDriftFlags(cmd *cobra.Command) {
+	cmd.PersistentFlags().BoolVarP(&drifts.FromRelease, "from-release", "", false,
+		"enable the flag to identify drifts from a release instead (disabled by default, works with command 'run' not with 'all')")
+}
+
+// Registers flags specific to command, all.
+func registerDriftAllFlags(cmd *cobra.Command) {
+	cmd.PersistentFlags().BoolVarP(&drifts.IsDefaultNamespace, "is-default-namespace", "", false,
+		"set this flag if drifts have to be checked specifically in 'default' namespace")
 }
