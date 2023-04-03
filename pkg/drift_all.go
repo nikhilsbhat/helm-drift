@@ -1,8 +1,6 @@
 package pkg
 
 import (
-	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/nikhilsbhat/helm-drift/pkg/deviation"
@@ -23,7 +21,7 @@ func (drift *Drift) GetAllDrift() error {
 		return err
 	}
 
-	charts, err := drift.getChartsFromReleases()
+	releases, err := drift.getChartsFromReleases()
 	if err != nil {
 		return err
 	}
@@ -34,12 +32,14 @@ func (drift *Drift) GetAllDrift() error {
 		}
 	}(drift)
 
-	chartsDeviations := make(map[string]deviation.DriftedReleases)
+	driftedReleases := make([]deviation.DriftedRelease, 0)
 
-	for _, chart := range charts {
-		kubeKindTemplates := drift.getTemplates([]byte(chart.Manifest))
+	for _, release := range releases {
+		drift.log.Debugf("identifying drifts for release '%s'", release.Name)
 
-		deviations, err := drift.renderToDisk(kubeKindTemplates, chart.Name, chart.Namespace)
+		kubeKindTemplates := drift.getTemplates([]byte(release.Manifest))
+
+		deviations, err := drift.renderToDisk(kubeKindTemplates, "", release.Name, release.Namespace)
 		if err != nil {
 			return err
 		}
@@ -50,22 +50,15 @@ func (drift *Drift) GetAllDrift() error {
 		}
 
 		if len(out.Deviations) == 0 {
-			drift.log.Infof("no drifts identified for relase '%s'", chart.Name)
+			drift.log.Infof("no drifts identified for relase '%s'", release.Name)
 
 			continue
 		}
 
-		chartsDeviations[chart.Name] = out
+		driftedReleases = append(driftedReleases, out)
 	}
 
 	drift.timeSpent = time.Since(startTime).Seconds()
 
-	jsonOut, err := json.MarshalIndent(chartsDeviations, "", " ")
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(string(jsonOut))
-
-	return nil
+	return drift.render(driftedReleases)
 }

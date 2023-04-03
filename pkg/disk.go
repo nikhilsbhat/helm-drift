@@ -14,9 +14,11 @@ const (
 	manifestFilePermission = 0o644
 )
 
-func (drift *Drift) renderToDisk(manifests []string, releaseName, releaseNamespace any) (deviation.DriftedReleases, error) {
-	releaseDrifted := deviation.DriftedReleases{
+func (drift *Drift) renderToDisk(manifests []string, chartName, releaseName, releaseNamespace any) (deviation.DriftedRelease, error) {
+	releaseDrifted := deviation.DriftedRelease{
 		Namespace: releaseNamespace.(string),
+		Release:   releaseName.(string),
+		Chart:     chartName.(string),
 	}
 
 	templatePath := filepath.Join(drift.TempPath, drift.release)

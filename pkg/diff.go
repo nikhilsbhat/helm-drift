@@ -7,11 +7,13 @@ import (
 	"github.com/nikhilsbhat/helm-drift/pkg/deviation"
 )
 
-func (drift *Drift) Diff(driftedReleases deviation.DriftedReleases) (deviation.DriftedReleases, error) {
+func (drift *Drift) Diff(driftedRelease deviation.DriftedRelease) (deviation.DriftedRelease, error) {
 	diffs := make([]deviation.Deviation, 0)
 
-	for _, devn := range driftedReleases.Deviations {
-		manifestPath := devn.ManifestPath
+	var drifted bool
+
+	for _, dvn := range driftedRelease.Deviations {
+		manifestPath := dvn.ManifestPath
 
 		drift.log.Debugf("calculating diff for %s", manifestPath)
 
@@ -19,19 +21,24 @@ func (drift *Drift) Diff(driftedReleases deviation.DriftedReleases) (deviation.D
 
 		cmd := command.NewCommand("kubectl", drift.log)
 
-		cmd.SetKubeCmd(driftedReleases.Namespace, arguments...)
+		cmd.SetKubeCmd(driftedRelease.Namespace, arguments...)
 
-		dvn, err := cmd.RunKubeCmd(devn)
+		dft, err := cmd.RunKubeCmd(dvn)
 		if err != nil {
-			return driftedReleases, err
+			return driftedRelease, err
 		}
 
-		diffs = append(diffs, dvn)
+		if dft.HasDrift {
+			drifted = dft.HasDrift
+		}
+
+		diffs = append(diffs, dft)
 	}
 
-	driftedReleases.Deviations = diffs
+	driftedRelease.Deviations = diffs
+	driftedRelease.HasDrift = drifted
 
-	drift.log.Debug("ran diffs for all manifests successfully")
+	drift.log.Debugf("ran diffs for all manifests for release '%s' successfully", driftedRelease.Release)
 
-	return driftedReleases, nil
+	return driftedRelease, nil
 }

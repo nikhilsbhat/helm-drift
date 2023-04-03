@@ -86,7 +86,7 @@ func (drift *Drift) GetDrift() error {
 
 	kubeKindTemplates := drift.getTemplates(chart)
 
-	deviations, err := drift.renderToDisk(kubeKindTemplates, drift.release, drift.namespace)
+	deviations, err := drift.renderToDisk(kubeKindTemplates, drift.chart, drift.release, drift.namespace)
 	if err != nil {
 		return err
 	}
@@ -97,7 +97,7 @@ func (drift *Drift) GetDrift() error {
 		}
 	}(drift)
 
-	var driftedReleases []deviation.DriftedReleases
+	var driftedReleases []deviation.DriftedRelease
 
 	out, err := drift.Diff(deviations)
 	if err != nil {
