@@ -15,7 +15,8 @@ func registerFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringArrayVar(&drifts.StringValues, "set-string", []string{},
 		"set STRING values on the command line (can specify multiple or separate values with commas: key1=val1,key2=val2)")
 	cmd.PersistentFlags().StringArrayVar(&drifts.FileValues, "set-file", []string{},
-		"set values from respective files specified via the command line (can specify multiple or separate values with commas: key1=path1,key2=path2)") //nolint:lll
+		"set values from respective files specified via the command line "+
+			"(can specify multiple or separate values with commas: key1=path1,key2=path2)")
 	cmd.PersistentFlags().VarP(&drifts.ValueFiles, "values", "f",
 		"specify values in a YAML file (can specify multiple)")
 	cmd.PersistentFlags().BoolVarP(&drifts.SkipTests, "skip-tests", "", false,

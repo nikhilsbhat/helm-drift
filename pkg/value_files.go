@@ -15,6 +15,7 @@ func (v *ValueFiles) String() string {
 //nolint:goerr113
 func (v *ValueFiles) Valid() error {
 	errStr := ""
+
 	for _, valuesFile := range *v {
 		if strings.TrimSpace(valuesFile) != "-" {
 			if _, err := os.Stat(valuesFile); os.IsNotExist(err) {

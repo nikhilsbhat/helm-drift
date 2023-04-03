@@ -3,22 +3,16 @@ linters:
   disable-all: false
   enable-all: true
   disable:
-    - gci
-    - wsl
     - gochecknoglobals
     - tagliatelle
     - exhaustivestruct
-    - nolintlint
     - exhaustruct
     - forbidigo
     - paralleltest
     - cyclop
     - ireturn
     - wrapcheck
-    - interfacebloat
     - forcetypeassert
-    - dupl
-    - goconst
     - maligned
 
 issues:

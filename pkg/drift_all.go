@@ -18,6 +18,7 @@ func (drift *Drift) GetAllDrift() error {
 	drift.log.Debugf("got all required values to identify drifts from chart/release '%s' proceeding furter to fetch the same", drift.release)
 
 	drift.setNameSpace()
+
 	if err := drift.setExternalDiff(); err != nil {
 		return err
 	}
@@ -34,6 +35,7 @@ func (drift *Drift) GetAllDrift() error {
 	}(drift)
 
 	chartsDeviations := make(map[string]deviation.DriftedReleases)
+
 	for _, chart := range charts {
 		kubeKindTemplates := drift.getTemplates([]byte(chart.Manifest))
 
@@ -52,6 +54,7 @@ func (drift *Drift) GetAllDrift() error {
 
 			continue
 		}
+
 		chartsDeviations[chart.Name] = out
 	}
 

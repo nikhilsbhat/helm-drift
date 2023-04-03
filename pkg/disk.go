@@ -26,11 +26,13 @@ func (drift *Drift) renderToDisk(manifests []string, releaseName, releaseNamespa
 
 	drift.log.Debugf("rendering helm manifests to disk under %s", templatePath)
 	drift.log.Debugf("creating directories '%s' to generate manifests", templatePath)
+
 	if err := os.MkdirAll(templatePath, templatePathPermission); err != nil {
 		return releaseDrifted, err
 	}
 
 	deviations := make([]deviation.Deviation, 0)
+
 	for _, manifest := range manifests {
 		name, err := k8s.NewName().Get(manifest)
 		if err != nil {
@@ -59,6 +61,7 @@ func (drift *Drift) renderToDisk(manifests []string, releaseName, releaseNamespa
 	}
 
 	releaseDrifted.Deviations = deviations
+
 	drift.log.Debug("all manifests rendered to disk successfully")
 
 	return releaseDrifted, nil
@@ -74,6 +77,7 @@ func (drift *Drift) cleanManifests(force bool) error {
 		if err := os.RemoveAll(templatePath); err != nil {
 			return err
 		}
+
 		drift.log.Debug("all manifests rendered to disk was cleaned")
 	} else {
 		drift.log.Debug("rendered manifests deletion skipped as it was disabled")

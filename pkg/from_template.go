@@ -17,12 +17,15 @@ func (drift *Drift) getChartFromTemplate() ([]byte, error) {
 	for _, value := range drift.Values {
 		flags = append(flags, "--set", value)
 	}
+
 	for _, stringValue := range drift.StringValues {
 		flags = append(flags, "--set-string", stringValue)
 	}
+
 	for _, fileValue := range drift.FileValues {
 		flags = append(flags, "--set-file", fileValue)
 	}
+
 	for _, valueFile := range drift.ValueFiles {
 		flags = append(flags, "--values", valueFile)
 	}
@@ -44,6 +47,7 @@ func (drift *Drift) getChartFromTemplate() ([]byte, error) {
 	output, err := cmd.Output()
 
 	var exitErr *exec.ExitError
+
 	if errors.As(err, &exitErr) {
 		drift.log.Errorf("rendering template for release: '%s' errored with %v", drift.release, err)
 
@@ -51,6 +55,7 @@ func (drift *Drift) getChartFromTemplate() ([]byte, error) {
 	}
 
 	var pathErr *fs.PathError
+
 	if errors.As(err, &pathErr) {
 		drift.log.Error("locating helm cli errored with", err)
 

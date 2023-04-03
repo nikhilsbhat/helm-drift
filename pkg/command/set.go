@@ -24,7 +24,6 @@ func (cmd *command) SetKubeCmd(namespace string, args ...string) {
 func (cmd *command) prepareKubeEnvironments() []string {
 	config := os.Getenv(KubeConfig)
 
-	os.Environ()
 	var envs []string
 
 	if len(config) != 0 {

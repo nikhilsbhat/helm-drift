@@ -9,6 +9,7 @@ import (
 
 func (drift *Drift) Diff(driftedReleases deviation.DriftedReleases) (deviation.DriftedReleases, error) {
 	diffs := make([]deviation.Deviation, 0)
+
 	for _, devn := range driftedReleases.Deviations {
 		manifestPath := devn.ManifestPath
 

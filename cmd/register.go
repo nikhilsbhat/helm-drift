@@ -40,6 +40,7 @@ func (c *driftCommands) prepareCommands() *cobra.Command {
 	for _, cmnd := range c.commands {
 		rootCmd.AddCommand(cmnd)
 	}
+
 	registerFlags(rootCmd)
 
 	return rootCmd

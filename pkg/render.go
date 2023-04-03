@@ -27,6 +27,7 @@ func (drift *Drift) render(drifts []deviation.DriftedReleases) error {
 
 		return nil
 	}
+
 	drift.print(drifts)
 
 	return nil
@@ -35,17 +36,21 @@ func (drift *Drift) render(drifts []deviation.DriftedReleases) error {
 func (drift *Drift) toTABLE(drifts []deviation.DriftedReleases) {
 	drfts := drifts[0]
 	deviations := deviation.Deviations(drfts.Deviations)
+
 	drift.log.Debug("rendering the drifts in table format since --summary is enabled")
 	table := drift.tableSchema()
 
 	var hasDrift bool
+
 	table.SetHeader([]string{"kind", "name", "drift"})
 	table.SetHeaderColor(tablewriter.Colors{tablewriter.Bold}, tablewriter.Colors{tablewriter.Bold}, tablewriter.Colors{tablewriter.Bold})
 
 	for _, dft := range drfts.Deviations {
 		tableRow := []string{dft.Kind, dft.Resource, dft.Drifted()}
+
 		if dft.HasDrift {
 			hasDrift = true
+
 			switch !drift.NoColor {
 			case true:
 				table.Rich(tableRow, []tablewriter.Colors{{}, {}, {tablewriter.FgRedColor}})
@@ -150,10 +155,13 @@ func (drift *Drift) toJSON(drifts []deviation.DriftedReleases) error {
 func (drift *Drift) print(drifts []deviation.DriftedReleases) {
 	drfts := drifts[0]
 	deviations := deviation.Deviations(drfts.Deviations)
+
 	var hasDrift bool
+
 	for _, dft := range drfts.Deviations {
 		if dft.HasDrift {
 			hasDrift = true
+
 			drift.write(addNewLine("------------------------------------------------------------------------------------"))
 			drift.write(addNewLine(addNewLine(fmt.Sprintf("Identified drifts in: '%s' '%s'", dft.Kind, dft.Resource))))
 			drift.write(addNewLine("-----------"))
@@ -161,9 +169,11 @@ func (drift *Drift) print(drifts []deviation.DriftedReleases) {
 			drift.write(addNewLine(addNewLine("-----------")))
 		}
 	}
+
 	if !hasDrift {
 		drift.write(addNewLine("YAY...! NO DRIFTS FOUND"))
 	}
+
 	drift.write(addNewLine(fmt.Sprintf("Release                                : %s\nChart                                  : %s", drift.release, drift.chart)))
 	drift.write(addNewLine(fmt.Sprintf("Total time spent on identifying drifts : %v", drift.timeSpent)))
 	drift.write(addNewLine(fmt.Sprintf("Total number of drifts found           : %v", deviations.Count())))

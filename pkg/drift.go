@@ -74,6 +74,7 @@ func (drift *Drift) GetDrift() error {
 	drift.log.Debugf("got all required values to identify drifts from chart/release '%s' proceeding furter to fetch the same", drift.release)
 
 	drift.setNameSpace()
+
 	if err := drift.setExternalDiff(); err != nil {
 		return err
 	}
@@ -97,6 +98,7 @@ func (drift *Drift) GetDrift() error {
 	}(drift)
 
 	var driftedReleases []deviation.DriftedReleases
+
 	out, err := drift.Diff(deviations)
 	if err != nil {
 		return err

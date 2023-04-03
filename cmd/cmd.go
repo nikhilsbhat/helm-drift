@@ -12,6 +12,7 @@ var cmd *cobra.Command
 //nolint:gochecknoinits
 func init() {
 	cmd = SetDriftCommands()
+
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 }
 
@@ -25,6 +26,7 @@ func Main() {
 // execute will actually execute the cli by taking the arguments passed to cli.
 func execute(args []string) error {
 	cmd.SetArgs(args)
+
 	if _, err := cmd.ExecuteC(); err != nil {
 		return err
 	}

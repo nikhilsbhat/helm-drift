@@ -23,6 +23,7 @@ func (drift *Drift) getChartFromRelease() ([]byte, error) {
 	}
 
 	client := action.NewGet(actionConfig)
+
 	helmRelease, err := client.Run(drift.release)
 	if err != nil {
 		return nil, err
@@ -39,6 +40,7 @@ func (drift *Drift) getChartsFromReleases() ([]*release.Release, error) {
 	drift.log.Debug("fetching all helm releases from kube cluster")
 
 	var namespace string
+
 	if drift.isAll() {
 		drift.log.Debug("no namespace specified, fetching all helm releases from the the cluster")
 	} else {
@@ -62,6 +64,7 @@ func (drift *Drift) isAll() bool {
 	if drift.namespace == "default" {
 		return !(drift.IsDefaultNamespace)
 	}
+
 	if len(drift.namespace) != 0 {
 		return false
 	}

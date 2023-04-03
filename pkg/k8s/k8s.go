@@ -25,6 +25,7 @@ func (name *Name) Get(dataMap string) (string, error) {
 	if err := yaml.Unmarshal([]byte(dataMap), &kindYaml); err != nil {
 		return "", err
 	}
+
 	if len(kindYaml) != 0 {
 		value, ok := kindYaml["metadata"].(map[string]interface{})["name"].(string)
 		if !ok {
@@ -43,6 +44,7 @@ func (kind *Kind) Get(dataMap string) (string, error) {
 	if err := yaml.Unmarshal([]byte(dataMap), &kindYaml); err != nil {
 		return "", err
 	}
+
 	if len(kindYaml) != 0 {
 		value, ok := kindYaml["kind"].(string)
 		if !ok {

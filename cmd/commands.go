@@ -115,6 +115,7 @@ func versionConfig(cmd *cobra.Command, args []string) error {
 	writer := bufio.NewWriter(os.Stdout)
 	versionInfo := fmt.Sprintf("%s \n", strings.Join([]string{"drift version", string(buildInfo)}, ": "))
 	_, err = writer.Write([]byte(versionInfo))
+
 	if err != nil {
 		log.Fatalln(err)
 	}

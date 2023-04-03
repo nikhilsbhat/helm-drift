@@ -58,6 +58,7 @@ func (dvn Deviations) Status() string {
 
 func (dvn Deviations) Count() int {
 	var count int
+
 	for _, dft := range dvn {
 		if dft.HasDrift {
 			count++
