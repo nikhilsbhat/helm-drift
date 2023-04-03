@@ -1,20 +1,20 @@
-## drift run
+## drift all
 
-Identifies drifts from a selected chart/release
+Identifies drifts from all release from the cluster
 
 ### Synopsis
 
-Lists all configuration drifts that are part of specified chart/release if exists.
+Lists all configuration drifts that are part of various releases present in the cluster.
 
 ```
-drift run [RELEASE] [CHART] [flags]
+drift all [flags]
 ```
 
 ### Examples
 
 ```
-  helm drift run prometheus-standalone path/to/chart/prometheus-standalone -f ~/path/to/override-config.yaml
-  helm drift run prometheus-standalone --from-release
+  helm drift all --kube-context k3d-sample
+helm drift all --kube-context k3d-sample -n sample
 ```
 
 ### Options
@@ -22,8 +22,8 @@ drift run [RELEASE] [CHART] [flags]
 ```
       --custom-diff KUBECTL_EXTERNAL_DIFF   custom diff command to use instead of default, the command passed here would be set under KUBECTL_EXTERNAL_DIFF.More information can be found here https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#diff
   -d, --disable-error-on-drift              enabling this would disable exiting with error if drifts were identified (works only when --summary is enabled)
-      --from-release                        enable the flag to identify drifts from a release instead (disabled by default, works with command 'run' not with 'all')
-  -h, --help                                help for run
+  -h, --help                                help for all
+      --is-default-namespace                set this flag if drifts have to be checked specifically in 'default' namespace
   -j, --json                                enable the flag to render drifts in json format (disabled by default)
       --regex string                        regex used to split helm template rendered (default "---\\n# Source:\\s.*.")
       --report                              when enabled the summary report would be rendered on to a file (this works only if --yaml or --json is enabled along with summary)

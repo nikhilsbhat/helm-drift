@@ -133,6 +133,7 @@ Usage:
   drift [command] [flags]
 
 Available Commands:
+  all         Identifies drifts from all release from the cluster
   completion  Generate the autocompletion script for the specified shell
   help        Help about any command
   run         Identifies drifts from a selected chart/release
@@ -141,6 +142,7 @@ Available Commands:
 Flags:
   -h, --help                     help for drift
   -l, --log-level string         log level for the plugin helm drift (defaults to info) (default "info")
+      --no-color                 enabling this would render summary with no color
       --set stringArray          set values on the command line (can specify multiple or separate values with commas: key1=val1,key2=val2)
       --set-file stringArray     set values from respective files specified via the command line (can specify multiple or separate values with commas: key1=path1,key2=path2)
       --set-string stringArray   set STRING values on the command line (can specify multiple or separate values with commas: key1=val1,key2=val2)
@@ -165,13 +167,54 @@ Examples:
   helm drift run prometheus-standalone --from-release
 
 Flags:
-      --from-release       enable the flag to identify drifts from a release instead (disabled by default)
-  -h, --help               help for run
-      --regex string       regex used to split helm template rendered (default "---\\n# Source:\\s.*.")
-      --skip-cleaning      enable the flag to skip cleaning the manifests rendered on to disk
-      --skip-validation    enable the flag if prerequisite validation needs to be skipped
-      --summary            if enabled, prints a quick summary in table format without printing actual drifts
-      --temp-path string   path on disk where the helm templates would be rendered on to (the same would be used be used by 'kubectl diff') (default "/Users/nikhil.bhat/.helm-drift/templates")
+      --custom-diff KUBECTL_EXTERNAL_DIFF   custom diff command to use instead of default, the command passed here would be set under KUBECTL_EXTERNAL_DIFF.More information can be found here https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#diff
+  -d, --disable-error-on-drift              enabling this would disable exiting with error if drifts were identified (works only when --summary is enabled)
+      --from-release                        enable the flag to identify drifts from a release instead (disabled by default, works with command 'run' not with 'all')
+  -h, --help                                help for run
+  -j, --json                                enable the flag to render drifts in json format (disabled by default)
+      --regex string                        regex used to split helm template rendered (default "---\\n# Source:\\s.*.")
+      --report                              when enabled the summary report would be rendered on to a file (this works only if --yaml or --json is enabled along with summary)
+      --skip-cleaning                       enable the flag to skip cleaning the manifests rendered on to disk
+      --skip-validation                     enable the flag if prerequisite validation needs to be skipped
+      --summary                             if enabled, prints a quick summary in table format without printing actual drifts
+      --temp-path string                    path on disk where the helm templates would be rendered on to (the same would be used be used by 'kubectl diff') (default "$(HOME)/.helm-drift/templates")
+  -y, --yaml                                enable the flag to render drifts in yaml format (disabled by default)
+
+Global Flags:
+  -l, --log-level string         log level for the plugin helm drift (defaults to info) (default "info")
+      --no-color                 enabling this would render summary with no color
+      --set stringArray          set values on the command line (can specify multiple or separate values with commas: key1=val1,key2=val2)
+      --set-file stringArray     set values from respective files specified via the command line (can specify multiple or separate values with commas: key1=path1,key2=path2)
+      --set-string stringArray   set STRING values on the command line (can specify multiple or separate values with commas: key1=val1,key2=val2)
+      --skip-tests               setting this would set '--skip-tests' for helm template command while generating templates
+  -f, --values ValueFiles        specify values in a YAML file (can specify multiple) (default [])
+```
+
+### `all`
+
+```shell
+Lists all configuration drifts that are part of various releases present in the cluster.
+
+Usage:
+  drift all [flags]
+
+Examples:
+  helm drift all --kube-context k3d-sample
+helm drift all --kube-context k3d-sample -n sample
+
+Flags:
+      --custom-diff KUBECTL_EXTERNAL_DIFF   custom diff command to use instead of default, the command passed here would be set under KUBECTL_EXTERNAL_DIFF.More information can be found here https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#diff
+  -d, --disable-error-on-drift              enabling this would disable exiting with error if drifts were identified (works only when --summary is enabled)
+  -h, --help                                help for all
+      --is-default-namespace                set this flag if drifts have to be checked specifically in 'default' namespace
+  -j, --json                                enable the flag to render drifts in json format (disabled by default)
+      --regex string                        regex used to split helm template rendered (default "---\\n# Source:\\s.*.")
+      --report                              when enabled the summary report would be rendered on to a file (this works only if --yaml or --json is enabled along with summary)
+      --skip-cleaning                       enable the flag to skip cleaning the manifests rendered on to disk
+      --skip-validation                     enable the flag if prerequisite validation needs to be skipped
+      --summary                             if enabled, prints a quick summary in table format without printing actual drifts
+      --temp-path string                    path on disk where the helm templates would be rendered on to (the same would be used be used by 'kubectl diff') (default "$(HOME)/.helm-drift/templates")
+  -y, --yaml                                enable the flag to render drifts in yaml format (disabled by default)
 
 Global Flags:
   -l, --log-level string         log level for the plugin helm drift (defaults to info) (default "info")

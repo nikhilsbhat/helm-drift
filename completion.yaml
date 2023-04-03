@@ -10,8 +10,22 @@ flags:
 commands:
   - name: run
     flags:
+      - custom-diff
       - disable-error-on-drift
       - from-release
+      - json
+      - regex
+      - report
+      - skip-cleaning
+      - skip-validation
+      - summary
+      - temp-path
+      - yaml
+  - name: all
+    flags:
+      - custom-diff
+      - disable-error-on-drift
+      - is-default-namespace
       - json
       - regex
       - report
