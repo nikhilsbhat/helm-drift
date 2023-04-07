@@ -81,7 +81,7 @@ func getAllCommand() *cobra.Command {
 		Short: "Identifies drifts from all release from the cluster",
 		Long:  "Lists all configuration drifts that are part of various releases present in the cluster.",
 		Example: `  helm drift all --kube-context k3d-sample
-helm drift all --kube-context k3d-sample -n sample`,
+  helm drift all --kube-context k3d-sample -n sample`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			drifts.SetLogger(drifts.LogLevel)

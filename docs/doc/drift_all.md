@@ -14,7 +14,7 @@ drift all [flags]
 
 ```
   helm drift all --kube-context k3d-sample
-helm drift all --kube-context k3d-sample -n sample
+  helm drift all --kube-context k3d-sample -n sample
 ```
 
 ### Options

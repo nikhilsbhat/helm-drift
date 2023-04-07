@@ -210,6 +210,9 @@ func (drift *Drift) print(drifts []deviation.DriftedRelease) {
 	var hasDrift bool
 
 	for _, dft := range drifts {
+		if !dft.HasDrift {
+			continue
+		}
 		drift.write(addNewLine("------------------------------------------------------------------------------------"))
 		drift.write(addNewLine(fmt.Sprintf("Release                                : %s", dft.Release)))
 
