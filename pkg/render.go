@@ -203,6 +203,10 @@ func (drift *Drift) toJSON(drifts []deviation.DriftedRelease) error {
 }
 
 func (drift *Drift) print(drifts []deviation.DriftedRelease) {
+	if len(drifts) == 0 {
+		os.Exit(0)
+	}
+
 	drfts := drifts[0]
 	deviations := deviation.Deviations(drfts.Deviations)
 	dvn := deviation.DriftedReleases(drifts)
@@ -213,6 +217,7 @@ func (drift *Drift) print(drifts []deviation.DriftedRelease) {
 		if !dft.HasDrift {
 			continue
 		}
+
 		drift.write(addNewLine("------------------------------------------------------------------------------------"))
 		drift.write(addNewLine(fmt.Sprintf("Release                                : %s", dft.Release)))
 

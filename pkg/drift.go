@@ -40,6 +40,8 @@ type Drift struct {
 	CustomDiff         string
 	All                bool
 	IsDefaultNamespace bool
+	Kind               []string
+	Name               string
 	release            string
 	chart              string
 	namespace          string

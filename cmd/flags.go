@@ -50,6 +50,10 @@ func registerCommonFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&drifts.CustomDiff, "custom-diff", "", "",
 		"custom diff command to use instead of default, the command passed here would be set under `KUBECTL_EXTERNAL_DIFF`."+
 			"More information can be found here https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#diff")
+	cmd.PersistentFlags().StringVarP(&drifts.Name, "name", "", "",
+		"name of the kubernetes resource to limit the drift identification")
+	cmd.PersistentFlags().StringSliceVarP(&drifts.Kind, "kind", "", nil,
+		"kubernetes resource names to limit the drift identification (--kind takes higher precedence over --name)")
 }
 
 // Registers flags specific to command, run.

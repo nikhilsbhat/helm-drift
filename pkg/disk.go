@@ -7,6 +7,7 @@ import (
 
 	"github.com/nikhilsbhat/helm-drift/pkg/deviation"
 	"github.com/nikhilsbhat/helm-drift/pkg/k8s"
+	"github.com/thoas/go-funk"
 )
 
 const (
@@ -44,6 +45,18 @@ func (drift *Drift) renderToDisk(manifests []string, chartName, releaseName, rel
 		kind, err := k8s.NewKind().Get(manifest)
 		if err != nil {
 			return releaseDrifted, err
+		}
+
+		if len(drift.Kind) != 0 {
+			if !funk.Contains(drift.Kind, kind) {
+				continue
+			}
+		}
+
+		if len(drift.Name) != 0 {
+			if name != drift.Name {
+				continue
+			}
 		}
 
 		drift.log.Debugf("generating manifest %s", name)
