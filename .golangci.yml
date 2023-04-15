@@ -29,6 +29,7 @@ issues:
 linters-settings:
   funlen:
     lines: 160
+    statements: 48
 
   lll:
     line-length: 165

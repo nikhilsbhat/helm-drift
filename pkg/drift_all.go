@@ -1,9 +1,14 @@
 package pkg
 
 import (
+	"fmt"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/nikhilsbhat/helm-drift/pkg/deviation"
+	"github.com/nikhilsbhat/helm-drift/pkg/errors"
+	helmRelease "helm.sh/helm/v3/pkg/release"
 )
 
 func (drift *Drift) GetAllDrift() error {
@@ -34,28 +39,54 @@ func (drift *Drift) GetAllDrift() error {
 
 	driftedReleases := make([]deviation.DriftedRelease, 0)
 
+	var waitGroup sync.WaitGroup
+
+	errChan := make(chan error)
+
+	waitGroup.Add(len(releases))
+
+	go func() {
+		waitGroup.Wait()
+		close(errChan)
+	}()
+
 	for _, release := range releases {
-		drift.log.Debugf("identifying drifts for release '%s'", release.Name)
+		go func(release *helmRelease.Release) {
+			defer waitGroup.Done()
+			drift.log.Debugf("identifying drifts for release '%s'", release.Name)
 
-		kubeKindTemplates := drift.getTemplates([]byte(release.Manifest))
+			kubeKindTemplates := drift.getTemplates([]byte(release.Manifest))
 
-		deviations, err := drift.renderToDisk(kubeKindTemplates, "", release.Name, release.Namespace)
-		if err != nil {
-			return err
+			deviations, err := drift.renderToDisk(kubeKindTemplates, "", release.Name, release.Namespace)
+			if err != nil {
+				errChan <- err
+			}
+
+			out, err := drift.Diff(deviations)
+			if err != nil {
+				errChan <- err
+			}
+
+			if len(out.Deviations) == 0 {
+				drift.log.Infof("no drifts identified for relase '%s'", release.Name)
+
+				return
+			}
+
+			driftedReleases = append(driftedReleases, out)
+		}(release)
+	}
+
+	var driftErrors []string
+
+	for errCh := range errChan {
+		if errCh != nil {
+			driftErrors = append(driftErrors, errCh.Error())
 		}
+	}
 
-		out, err := drift.Diff(deviations)
-		if err != nil {
-			return err
-		}
-
-		if len(out.Deviations) == 0 {
-			drift.log.Infof("no drifts identified for relase '%s'", release.Name)
-
-			continue
-		}
-
-		driftedReleases = append(driftedReleases, out)
+	if len(driftErrors) != 0 {
+		return &errors.DriftError{Message: fmt.Sprintf("identifying drifts errored with: %s", strings.Join(driftErrors, "\n"))}
 	}
 
 	drift.timeSpent = time.Since(startTime).Seconds()

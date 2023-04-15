@@ -8,17 +8,17 @@
 [![shields](https://img.shields.io/github/downloads/nikhilsbhat/helm-drift/total.svg)](https://github.com/nikhilsbhat/helm-drift/releases)
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/helm-drift)](https://artifacthub.io/packages/search?repo=helm-drift)
 
-The helm plugin that helps in identifying deviations(mostly due to in-place edits) in the configurations that are deployed via helm chart.
+The Helm plugin that comes in handy while identifying configuration drifts (mostly due to in-place edits) from the deployed Helm charts.
 
 ## Introduction
 
-Kubernetes' resources can be deployed via package manager helm, it is easier to deploy but to manage the same require more effort.
+Kubernetes' resources can be deployed via the package manager Helm; it is easier to deploy, but managing them requires more effort.
 
-If helm is used, strictly all resources should be managed by helm itself, but there are places where manual interventions are needed.</br>
-This results in configuration drift from helm charts deployed.
-These changes can be overridden by next helm release, what if the required changes are lost before adding it back to helm chart?
+If Helm is used, strictly all resources should be managed by Helm itself, but there are places where manual interventions are needed.</br>
+This results in configuration drift from deployed helm charts..
+These changes can be overridden by the next helm release, but what if the required changes are lost before adding them back to the helm chart?
 
-This helm plugin is intended to solve the same problem by validating the resources that are part of appropriate chart/release against kubernetes.
+This Helm drift plugin is intended to solve the same problem by validating the resources that are part of an appropriate chart or release against Kubernetes.
 
 This leverages kubectl [diff](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#diff) to identify the drifts.
 
@@ -124,7 +124,7 @@ Use the executable just like any other go-cli application.
 ```bash
 helm drift [command] [flags]
 ```
-Make sure appropriate command is used for the actions, to check the available commands and flags use `helm drift --help`
+Make sure the appropriate command is used for the actions. To check the available commands and flags, use `helm drift --help`
 
 ```bash
 Identifies drifts (mostly due to in place edits) in the kubernetes workloads provisioned via helm charts.
@@ -232,9 +232,9 @@ Updated documentation on all available commands and flags can be found [here](ht
 
 ## Caveats
 
-Identifying drifts on `CRD`'s would be tricky, plugin might not respond with correct data.
+Identifying drifts on `CRDs` would be tricky, and the plugin might not respond with the correct data.
 
-If helm hooks defined in chart, one might find drifts always on helm hooks which is marked with `hook-succeeded` and `hook-failed` when identifying drifts from charts.</br>
-Things would work perfectly when identifying drifts from installed release.
+If helm hooks are defined in the chart, one might find drifts always on helm hooks, which are marked with `hook-succeeded` and `hook-failed` when identifying drifts from charts..</br>
+Things would work perfectly when identifying drifts from the installed release.
 
-Support for adding a `flag` to skip helm `hooks` if required is under development.
+Support for adding a `flag` to skip helm `hooks, if required, is under development.
