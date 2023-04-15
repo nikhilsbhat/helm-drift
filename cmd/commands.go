@@ -16,8 +16,8 @@ import (
 func getRootCommand() *cobra.Command {
 	rootCommand := &cobra.Command{
 		Use:   "drift [command]",
-		Short: "Utility that helps in identifying drifts in infrastructure",
-		Long:  `Identifies drifts (mostly due to in place edits) in the kubernetes workloads provisioned via helm charts.`,
+		Short: "A utility that helps in identifying drifts in infrastructure",
+		Long:  `Identifies configuration drifts (mostly due to in-place edits) in the Kubernetes workloads provisioned via Helm charts.`,
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := cmd.Usage(); err != nil {
@@ -36,7 +36,7 @@ func getVersionCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "version [flags]",
 		Short: "Command to fetch the version of helm-drift installed",
-		Long:  `This will help user to find what version of helm-drift plugin he/she installed in her machine.`,
+		Long:  `This will help the user find what version of the helm-drift plugin he or she installed in her machine.`,
 		RunE:  versionConfig,
 	}
 }
@@ -44,8 +44,8 @@ func getVersionCommand() *cobra.Command {
 func getRunCommand() *cobra.Command {
 	driftCommand := &cobra.Command{
 		Use:   "run [RELEASE] [CHART] [flags]",
-		Short: "Identifies drifts from a selected chart/release",
-		Long:  "Lists all configuration drifts that are part of specified chart/release if exists.",
+		Short: "Identifies drifts from a selected chart or release.",
+		Long:  "It lists all configuration drifts that are part of the specified chart or release, if one exists.",
 		Example: `  helm drift run prometheus-standalone path/to/chart/prometheus-standalone -f ~/path/to/override-config.yaml
   helm drift run prometheus-standalone --from-release`,
 		Args: minimumArgError,
@@ -78,8 +78,8 @@ func getRunCommand() *cobra.Command {
 func getAllCommand() *cobra.Command {
 	driftCommand := &cobra.Command{
 		Use:   "all",
-		Short: "Identifies drifts from all release from the cluster",
-		Long:  "Lists all configuration drifts that are part of various releases present in the cluster.",
+		Short: "Identifies drifts from all releases from the cluster.",
+		Long:  "It lists all configuration drifts that are part of various releases present in the cluster.",
 		Example: `  helm drift all --kube-context k3d-sample
   helm drift all --kube-context k3d-sample -n sample`,
 		Args: cobra.NoArgs,

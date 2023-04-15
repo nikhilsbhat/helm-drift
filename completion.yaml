@@ -14,6 +14,8 @@ commands:
       - disable-error-on-drift
       - from-release
       - json
+      - kind
+      - name
       - regex
       - report
       - skip-cleaning
@@ -27,6 +29,8 @@ commands:
       - disable-error-on-drift
       - is-default-namespace
       - json
+      - kind
+      - name
       - regex
       - report
       - skip-cleaning
