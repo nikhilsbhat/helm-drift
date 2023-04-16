@@ -1,5 +1,6 @@
 package command
 
+//go:generate mockgen -destination ../mocks/command/run.go -package mockCommand -source ./run.go
 import (
 	"errors"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	"github.com/nikhilsbhat/helm-drift/pkg/deviation"
 )
 
+// RunKubeCmd runs the kubectl command with all predefined arguments.
 func (cmd *command) RunKubeCmd(deviation deviation.Deviation) (deviation.Deviation, error) {
 	cmd.log.Debugf("envionment variables that would be used: %v", cmd.baseCmd.Environ())
 

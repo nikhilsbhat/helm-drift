@@ -1,26 +1,23 @@
 package k8s
 
 import (
-	"fmt"
+	"github.com/nikhilsbhat/helm-drift/pkg/errors"
 
 	"gopkg.in/yaml.v3"
 )
 
 type (
-	Name map[string]interface{}
-	Kind map[string]interface{}
+	Resource map[string]interface{}
 )
 
-type NameInterface interface {
-	Get(dataMap string) (string, error)
+// ResourceInterface implements methods to get resource name and kind.
+type ResourceInterface interface {
+	GetName(dataMap string) (string, error)
+	GetKind(dataMap string) (string, error)
 }
 
-type KindInterface interface {
-	Get(dataMap string) (string, error)
-}
-
-//nolint:goerr113
-func (name *Name) Get(dataMap string) (string, error) {
+// GetName gets the name form the kubernetes resource.
+func (resource *Resource) GetName(dataMap string) (string, error) {
 	var kindYaml map[string]interface{}
 	if err := yaml.Unmarshal([]byte(dataMap), &kindYaml); err != nil {
 		return "", err
@@ -29,7 +26,7 @@ func (name *Name) Get(dataMap string) (string, error) {
 	if len(kindYaml) != 0 {
 		value, ok := kindYaml["metadata"].(map[string]interface{})["name"].(string)
 		if !ok {
-			return "", fmt.Errorf("failed to get name from the manifest, 'name' is not type string")
+			return "", &errors.DriftError{Message: "failed to get name from the manifest, 'name' is not type string"}
 		}
 
 		return value, nil
@@ -38,8 +35,8 @@ func (name *Name) Get(dataMap string) (string, error) {
 	return "", nil
 }
 
-//nolint:goerr113
-func (kind *Kind) Get(dataMap string) (string, error) {
+// GetKind helps in identifying kind form the kubernetes resource.
+func (resource *Resource) GetKind(dataMap string) (string, error) {
 	var kindYaml map[string]interface{}
 	if err := yaml.Unmarshal([]byte(dataMap), &kindYaml); err != nil {
 		return "", err
@@ -48,7 +45,7 @@ func (kind *Kind) Get(dataMap string) (string, error) {
 	if len(kindYaml) != 0 {
 		value, ok := kindYaml["kind"].(string)
 		if !ok {
-			return "", fmt.Errorf("failed to get kube kind from the manifest, 'kind' is not type string")
+			return "", &errors.DriftError{Message: "failed to get kube kind from the manifest, 'kind' is not type string"}
 		}
 
 		return value, nil
@@ -57,10 +54,7 @@ func (kind *Kind) Get(dataMap string) (string, error) {
 	return "", nil
 }
 
-func NewName() NameInterface {
-	return &Name{}
-}
-
-func NewKind() KindInterface {
-	return &Kind{}
+// NewResource returns aa new instance of ResourceInterface
+func NewResource() ResourceInterface {
+	return &Resource{}
 }

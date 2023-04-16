@@ -1,5 +1,6 @@
 package command
 
+//go:generate mockgen -destination ../mocks/command/set.go -package mockCommand -source ./set.go
 import (
 	"fmt"
 	"os"
@@ -8,6 +9,7 @@ import (
 	"k8s.io/client-go/util/homedir"
 )
 
+// SetKubeCmd sets the kubectl command with all predefined arguments.
 func (cmd *command) SetKubeCmd(namespace string, args ...string) {
 	cmd.baseCmd.Env = cmd.prepareKubeEnvironments()
 	cmd.baseCmd.Args = append(cmd.baseCmd.Args, "diff")

@@ -1,5 +1,6 @@
 package command
 
+//go:generate mockgen -destination ../mocks/command/exec.go -package mockCommand -source ./exec.go
 import (
 	"context"
 	"os/exec"
@@ -14,6 +15,7 @@ const (
 	KubeConfig    = "KUBECONFIG"
 )
 
+// Exec implements methods that set's and run's the kubectl command.
 type Exec interface {
 	SetKubeCmd(namespace string, args ...string)
 	RunKubeCmd(deviation deviation.Deviation) (deviation.Deviation, error)
@@ -24,6 +26,7 @@ type command struct {
 	log     *log.Logger
 }
 
+// NewCommand returns new instance of Exec.
 func NewCommand(cmd string, logger *log.Logger) Exec {
 	commandClient := command{
 		baseCmd: exec.CommandContext(context.Background(), cmd),

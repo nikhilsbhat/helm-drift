@@ -54,12 +54,12 @@ func (drift *Drift) renderToDisk(manifests []string, chartName, releaseName, rel
 		go func(manifest string) {
 			defer waitGroup.Done()
 
-			name, err := k8s.NewName().Get(manifest)
+			name, err := k8s.NewResource().GetName(manifest)
 			if err != nil {
 				errChan <- err
 			}
 
-			kind, err := k8s.NewKind().Get(manifest)
+			kind, err := k8s.NewResource().GetKind(manifest)
 			if err != nil {
 				errChan <- err
 			}
