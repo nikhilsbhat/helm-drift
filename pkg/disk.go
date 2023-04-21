@@ -76,12 +76,14 @@ func (drift *Drift) renderToDisk(manifests []string, chartName, releaseName, rel
 				}
 			}
 
-			drift.log.Debugf("generating manifest %s", name)
+			drift.log.Debugf("generating manifest '%s'", name)
 
 			manifestPath := filepath.Join(templatePath, fmt.Sprintf("%s.%s.yaml", name, kind))
 			if err = os.WriteFile(manifestPath, []byte(manifest), manifestFilePermission); err != nil {
 				errChan <- err
 			}
+
+			drift.log.Debugf("manifest for '%s' generated successfully", name)
 
 			dvn := deviation.Deviation{
 				Kind:         kind,
@@ -103,6 +105,13 @@ func (drift *Drift) renderToDisk(manifests []string, chartName, releaseName, rel
 
 	if len(diskErrors) != 0 {
 		return deviation.DriftedRelease{}, &errors.DriftError{Message: fmt.Sprintf("rendering helm manifests to disk errored: %s", strings.Join(diskErrors, "\n"))}
+	}
+
+	if len(deviations) != len(manifests) {
+		return deviation.DriftedRelease{},
+			&errors.DriftError{
+				Message: fmt.Sprintf("not all manifests were rendered to disk successfully, rendered manifests are: %v", funk.Get(deviations, "Deviation.Kind")),
+			}
 	}
 
 	releaseDrifted.Deviations = deviations
