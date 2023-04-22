@@ -41,6 +41,7 @@ type Drift struct {
 	All                bool
 	IsDefaultNamespace bool
 	Kind               []string
+	SkipKinds          []string
 	Name               string
 	release            string
 	chart              string

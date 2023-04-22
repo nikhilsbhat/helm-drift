@@ -4,12 +4,21 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"log"
 	"os"
 	"os/exec"
 	"regexp"
 	"strings"
 
+	"github.com/nikhilsbhat/helm-drift/pkg/deviation"
+	"github.com/nikhilsbhat/helm-drift/pkg/k8s"
 	"github.com/sirupsen/logrus"
+	"github.com/thoas/go-funk"
+)
+
+type (
+	HelmTemplates []string
+	HelmTemplate  string
 )
 
 func (drift *Drift) getChartFromTemplate() ([]byte, error) {
@@ -73,4 +82,95 @@ func (drift *Drift) getTemplates(template []byte) []string {
 	kinds = kinds[1:]
 
 	return kinds
+}
+
+func (templates *HelmTemplates) FilterBySkip(drift *Drift) []string {
+	return funk.Filter(*templates, func(tmpl string) bool {
+		if len(drift.SkipKinds) == 0 {
+			return true
+		}
+
+		kind, err := k8s.NewResource().GetKind(tmpl)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		return !funk.Contains(drift.SkipKinds, kind)
+	}).([]string)
+}
+
+func (templates *HelmTemplates) FilterByKind(drift *Drift) []string {
+	return funk.Filter(*templates, func(tmpl string) bool {
+		if len(drift.Kind) == 0 {
+			return true
+		}
+
+		kind, err := k8s.NewResource().GetKind(tmpl)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		return funk.Contains(drift.Kind, kind)
+	}).([]string)
+}
+
+func (templates *HelmTemplates) FilterByName(drift *Drift) []string {
+	return funk.Filter(*templates, func(tmpl string) bool {
+		if len(drift.Name) == 0 {
+			return true
+		}
+
+		name, err := k8s.NewResource().GetName(tmpl)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		return name == drift.Name
+	}).([]string)
+}
+
+func (templates *HelmTemplates) Get() ([]deviation.Deviation, error) {
+	deviations := make([]deviation.Deviation, 0)
+
+	for _, manifest := range *templates {
+		name, err := k8s.NewResource().GetName(manifest)
+		if err != nil {
+			return nil, err
+		}
+
+		kind, err := k8s.NewResource().GetKind(manifest)
+		if err != nil {
+			return nil, err
+		}
+
+		deviations = append(deviations, deviation.Deviation{Resource: name, Kind: kind})
+	}
+
+	return deviations, nil
+}
+
+func (template *HelmTemplate) Get() (deviation.Deviation, error) {
+	name, err := k8s.NewResource().GetName(string(*template))
+	if err != nil {
+		return deviation.Deviation{}, err
+	}
+
+	kind, err := k8s.NewResource().GetKind(string(*template))
+	if err != nil {
+		return deviation.Deviation{}, err
+	}
+
+	return deviation.Deviation{Resource: name, Kind: kind}, nil
+}
+
+func NewHelmTemplate(template string) *HelmTemplate {
+	helmTemplate := HelmTemplate(template)
+
+	return &helmTemplate
+}
+
+func NewHelmTemplates(templates []string) *HelmTemplates {
+	helmTemplates := HelmTemplates(templates)
+
+	return &helmTemplates
 }

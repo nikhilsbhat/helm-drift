@@ -69,6 +69,7 @@ func getRunCommand() *cobra.Command {
 		},
 	}
 
+	driftCommand.SilenceErrors = true
 	registerCommonFlags(driftCommand)
 	registerDriftFlags(driftCommand)
 
@@ -100,6 +101,7 @@ func getAllCommand() *cobra.Command {
 		},
 	}
 
+	driftCommand.SilenceErrors = true
 	registerCommonFlags(driftCommand)
 	registerDriftAllFlags(driftCommand)
 

@@ -2,7 +2,6 @@ package k8s
 
 import (
 	"github.com/nikhilsbhat/helm-drift/pkg/errors"
-
 	"gopkg.in/yaml.v3"
 )
 
@@ -54,7 +53,7 @@ func (resource *Resource) GetKind(dataMap string) (string, error) {
 	return "", nil
 }
 
-// NewResource returns aa new instance of ResourceInterface
+// NewResource returns aa new instance of ResourceInterface.
 func NewResource() ResourceInterface {
 	return &Resource{}
 }

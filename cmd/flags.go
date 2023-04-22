@@ -54,6 +54,8 @@ func registerCommonFlags(cmd *cobra.Command) {
 		"name of the kubernetes resource to limit the drift identification")
 	cmd.PersistentFlags().StringSliceVarP(&drifts.Kind, "kind", "", nil,
 		"kubernetes resource names to limit the drift identification (--kind takes higher precedence over --name)")
+	cmd.PersistentFlags().StringSliceVarP(&drifts.SkipKinds, "skip", "", nil,
+		"kubernetes resource names to skip the drift identification (ex: --skip Deployments)")
 }
 
 // Registers flags specific to command, run.

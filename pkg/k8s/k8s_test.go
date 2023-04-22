@@ -1,9 +1,10 @@
 package k8s_test
 
 import (
+	"testing"
+
 	"github.com/nikhilsbhat/helm-drift/pkg/k8s"
 	"github.com/stretchr/testify/suite"
-	"testing"
 )
 
 type K8sTestSuite struct {
