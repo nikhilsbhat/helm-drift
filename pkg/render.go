@@ -14,6 +14,8 @@ import (
 )
 
 func (drift *Drift) render(drifts []deviation.DriftedRelease) error {
+	drift.write(addNewLine(""))
+
 	if drift.Summary {
 		if drift.JSON {
 			return drift.toJSON(drifts)

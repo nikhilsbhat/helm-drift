@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
-	"sync"
 
 	"github.com/nikhilsbhat/helm-drift/pkg/deviation"
 	"github.com/nikhilsbhat/helm-drift/pkg/errors"
@@ -20,6 +18,8 @@ func (drift *Drift) renderToDisk(manifests []string, chartName, releaseName, rel
 	manifests = NewHelmTemplates(manifests).FilterBySkip(drift)
 	manifests = NewHelmTemplates(manifests).FilterByKind(drift)
 	manifests = NewHelmTemplates(manifests).FilterByName(drift)
+
+	diskProgressBar := NewProgress(len(manifests), "rendering manifests to disk")
 
 	releaseDrifted := deviation.DriftedRelease{
 		Namespace: releaseNamespace.(string),
@@ -41,56 +41,32 @@ func (drift *Drift) renderToDisk(manifests []string, chartName, releaseName, rel
 
 	deviations := make([]deviation.Deviation, 0)
 
-	var waitGroup sync.WaitGroup
-
-	errChan := make(chan error)
-
-	waitGroup.Add(len(manifests))
-
-	go func() {
-		waitGroup.Wait()
-		close(errChan)
-	}()
-
 	for _, manifest := range manifests {
-		go func(manifest string) {
-			defer waitGroup.Done()
-
-			template, err := NewHelmTemplate(manifest).Get()
-			if err != nil {
-				errChan <- err
-			}
-
-			drift.log.Debugf("generating manifest '%s'", template.Resource)
-
-			manifestPath := filepath.Join(templatePath, fmt.Sprintf("%s.%s.yaml", template.Resource, template.Kind))
-			if err = os.WriteFile(manifestPath, []byte(manifest), manifestFilePermission); err != nil {
-				errChan <- err
-			}
-
-			drift.log.Debugf("manifest for '%s' generated successfully", template.Resource)
-
-			dvn := deviation.Deviation{
-				Kind:         template.Kind,
-				Resource:     template.Resource,
-				TemplatePath: templatePath,
-				ManifestPath: manifestPath,
-			}
-			deviations = append(deviations, dvn)
-		}(manifest)
-	}
-
-	var diskErrors []string
-
-	for err := range errChan {
-		if err != nil {
-			diskErrors = append(diskErrors, err.Error())
+		if err := diskProgressBar.Add(1); err != nil {
+			return deviation.DriftedRelease{}, err
 		}
-	}
 
-	if len(diskErrors) != 0 {
-		return deviation.DriftedRelease{},
-			&errors.DriftError{Message: fmt.Sprintf("rendering helm manifests to disk errored: %s", strings.Join(diskErrors, "\n"))}
+		template, err := NewHelmTemplate(manifest).Get()
+		if err != nil {
+			return deviation.DriftedRelease{}, err
+		}
+
+		drift.log.Debugf("generating manifest '%s'", template.Resource)
+
+		manifestPath := filepath.Join(templatePath, fmt.Sprintf("%s.%s.yaml", template.Resource, template.Kind))
+		if err = os.WriteFile(manifestPath, []byte(manifest), manifestFilePermission); err != nil {
+			return deviation.DriftedRelease{}, err
+		}
+
+		drift.log.Debugf("manifest for '%s' generated successfully", template.Resource)
+
+		dvn := deviation.Deviation{
+			Kind:         template.Kind,
+			Resource:     template.Resource,
+			TemplatePath: templatePath,
+			ManifestPath: manifestPath,
+		}
+		deviations = append(deviations, dvn)
 	}
 
 	if len(deviations) != len(manifests) {
@@ -104,7 +80,9 @@ func (drift *Drift) renderToDisk(manifests []string, chartName, releaseName, rel
 
 	releaseDrifted.Deviations = deviations
 
-	drift.log.Debug("all manifests rendered to disk successfully")
+	if err := diskProgressBar.Finish(); err != nil {
+		return deviation.DriftedRelease{}, err
+	}
 
 	return releaseDrifted, nil
 }
