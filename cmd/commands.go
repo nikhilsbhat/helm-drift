@@ -80,7 +80,8 @@ func getAllCommand() *cobra.Command {
 	driftCommand := &cobra.Command{
 		Use:   "all",
 		Short: "Identifies drifts from all releases from the cluster.",
-		Long:  "It lists all configuration drifts that are part of various releases present in the cluster.",
+		Long: `It lists all configuration drifts that are part of various releases present in the cluster. 
+Do note that this is expensive operation since multiple kubectl command would be executed in parallel.`,
 		Example: `  helm drift all --kube-context k3d-sample
   helm drift all --kube-context k3d-sample -n sample`,
 		Args: cobra.NoArgs,
