@@ -1,5 +1,5 @@
 name: "drift"
-version: "0.0.4"
+version: "0.0.5"
 usage: "Identifies configurations deviated from helm charts"
 description: 'Identifies configurations deviated from helm charts, mostly due to inplace edits of kubernetes workload'
 useTunnel: true
