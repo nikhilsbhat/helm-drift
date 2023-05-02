@@ -30,3 +30,6 @@ bin/
 # dropping the artifacts that the plugin generates
 helm_drift_*.json
 helm_drift_*.yaml
+
+# dropping helm charts.
+example/chart/nginx
