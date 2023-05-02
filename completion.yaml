@@ -18,6 +18,7 @@ commands:
       - name
       - regex
       - report
+      - skip
       - skip-cleaning
       - skip-validation
       - summary
@@ -33,6 +34,7 @@ commands:
       - name
       - regex
       - report
+      - skip
       - skip-cleaning
       - skip-validation
       - summary
