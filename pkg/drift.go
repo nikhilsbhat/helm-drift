@@ -67,7 +67,7 @@ func (drift *Drift) SetWriter(writer io.Writer) {
 }
 
 // GetDrift gets all the drifts that the given release/chart has.
-func (drift *Drift) GetDrift() error {
+func (drift *Drift) GetDrift() {
 	startTime := time.Now()
 
 	if err := drift.cleanManifests(true); err != nil {
@@ -79,19 +79,19 @@ func (drift *Drift) GetDrift() error {
 	drift.setNameSpace()
 
 	if err := drift.setExternalDiff(); err != nil {
-		return err
+		drift.log.Fatalf("%v", err)
 	}
 
 	chart, err := drift.getChartManifests()
 	if err != nil {
-		return err
+		drift.log.Fatalf("%v", err)
 	}
 
 	kubeKindTemplates := drift.getTemplates(chart)
 
 	deviations, err := drift.renderToDisk(kubeKindTemplates, drift.chart, drift.release, drift.namespace)
 	if err != nil {
-		return err
+		drift.log.Fatalf("%v", err)
 	}
 
 	defer func(drift *Drift) {
@@ -104,20 +104,20 @@ func (drift *Drift) GetDrift() error {
 
 	out, err := drift.Diff(deviations)
 	if err != nil {
-		return err
+		drift.log.Fatalf("%v", err)
 	}
 
 	if len(out.Deviations) == 0 {
 		drift.log.Info("no drifts were identified")
+	} else {
+		driftedReleases = append(driftedReleases, out)
 
-		return nil
+		drift.timeSpent = time.Since(startTime).Seconds()
+
+		if err = drift.render(driftedReleases); err != nil {
+			drift.log.Fatalf("%v", err)
+		}
 	}
-
-	driftedReleases = append(driftedReleases, out)
-
-	drift.timeSpent = time.Since(startTime).Seconds()
-
-	return drift.render(driftedReleases)
 }
 
 func (drift *Drift) getChartManifests() ([]byte, error) {

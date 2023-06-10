@@ -65,7 +65,9 @@ func getRunCommand() *cobra.Command {
 				}
 			}
 
-			return drifts.GetDrift()
+			drifts.GetDrift()
+
+			return nil
 		},
 	}
 
@@ -98,7 +100,9 @@ Do note that this is expensive operation since multiple kubectl command would be
 
 			drifts.All = true
 
-			return drifts.GetAllDrift()
+			drifts.GetAllDrift()
+
+			return nil
 		},
 	}
 

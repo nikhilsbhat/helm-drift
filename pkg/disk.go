@@ -53,7 +53,7 @@ func (drift *Drift) renderToDisk(manifests []string, chartName, releaseName, rel
 
 		drift.log.Debugf("generating manifest '%s'", template.Resource)
 
-		manifestPath := filepath.Join(templatePath, fmt.Sprintf("%s.%s.yaml", template.Resource, template.Kind))
+		manifestPath := filepath.Join(templatePath, fmt.Sprintf("%s.%s.%s.yaml", template.Resource, template.Kind, releaseName))
 		if err = os.WriteFile(manifestPath, []byte(manifest), manifestFilePermission); err != nil {
 			return deviation.DriftedRelease{}, err
 		}

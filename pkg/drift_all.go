@@ -11,7 +11,7 @@ import (
 	helmRelease "helm.sh/helm/v3/pkg/release"
 )
 
-func (drift *Drift) GetAllDrift() error {
+func (drift *Drift) GetAllDrift() {
 	startTime := time.Now()
 
 	if err := drift.cleanManifests(true); err != nil {
@@ -23,12 +23,12 @@ func (drift *Drift) GetAllDrift() error {
 	drift.setNameSpace()
 
 	if err := drift.setExternalDiff(); err != nil {
-		return err
+		drift.log.Fatalf("%v", err)
 	}
 
 	releases, err := drift.getChartsFromReleases()
 	if err != nil {
-		return err
+		drift.log.Fatalf("%v", err)
 	}
 
 	defer func(drift *Drift) {
@@ -86,10 +86,12 @@ func (drift *Drift) GetAllDrift() error {
 	}
 
 	if len(driftErrors) != 0 {
-		return &errors.DriftError{Message: fmt.Sprintf("identifying drifts errored with: %s", strings.Join(driftErrors, "\n"))}
+		drift.log.Fatalf("%v", &errors.DriftError{Message: fmt.Sprintf("identifying drifts errored with: %s", strings.Join(driftErrors, "\n"))})
 	}
 
 	drift.timeSpent = time.Since(startTime).Seconds()
 
-	return drift.render(driftedReleases)
+	if err = drift.render(driftedReleases); err != nil {
+		drift.log.Fatalf("%v", err)
+	}
 }
