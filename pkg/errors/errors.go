@@ -27,12 +27,21 @@ type DiskError struct {
 	Errors chan error
 }
 
+type NotFoundError struct {
+	Key      string
+	Manifest string
+}
+
 func (e *PreValidationError) Error() string {
 	return e.Message
 }
 
 func (e *DriftError) Error() string {
 	return e.Message
+}
+
+func (e *NotFoundError) Error() string {
+	return fmt.Sprintf("failed to get key '%s' from the manifest '%s'", e.Key, e.Manifest)
 }
 
 func (e *DiskError) HasDiskError() (string, bool) {

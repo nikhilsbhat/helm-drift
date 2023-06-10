@@ -76,7 +76,7 @@ func (drift *Drift) GetDrift() {
 
 	drift.log.Debugf("got all required values to identify drifts from chart/release '%s' proceeding furter to fetch the same", drift.release)
 
-	drift.setNameSpace()
+	drift.setReleaseNameSpace()
 
 	if err := drift.setExternalDiff(); err != nil {
 		drift.log.Fatalf("%v", err)
@@ -89,7 +89,7 @@ func (drift *Drift) GetDrift() {
 
 	kubeKindTemplates := drift.getTemplates(chart)
 
-	deviations, err := drift.renderToDisk(kubeKindTemplates, drift.chart, drift.release, drift.namespace)
+	renderedManifests, err := drift.renderToDisk(kubeKindTemplates, drift.chart, drift.release, drift.namespace)
 	if err != nil {
 		drift.log.Fatalf("%v", err)
 	}
@@ -102,7 +102,7 @@ func (drift *Drift) GetDrift() {
 
 	var driftedReleases []deviation.DriftedRelease
 
-	out, err := drift.Diff(deviations)
+	out, err := drift.Diff(renderedManifests)
 	if err != nil {
 		drift.log.Fatalf("%v", err)
 	}
@@ -132,7 +132,7 @@ func (drift *Drift) getChartManifests() ([]byte, error) {
 	return drift.getChartFromTemplate()
 }
 
-func (drift *Drift) setNameSpace() {
+func (drift *Drift) setReleaseNameSpace() {
 	drift.namespace = strings.TrimSpace(os.Getenv(command.HelmNamespace))
 }
 

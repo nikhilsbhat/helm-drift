@@ -39,7 +39,7 @@ func (drift *Drift) renderToDisk(manifests []string, chartName, releaseName, rel
 		return releaseDrifted, err
 	}
 
-	deviations := make([]deviation.Deviation, 0)
+	templates := make([]deviation.Deviation, 0)
 
 	for _, manifest := range manifests {
 		if err := diskProgressBar.Add(1); err != nil {
@@ -63,22 +63,24 @@ func (drift *Drift) renderToDisk(manifests []string, chartName, releaseName, rel
 		dvn := deviation.Deviation{
 			Kind:         template.Kind,
 			Resource:     template.Resource,
+			NameSpace:    template.NameSpace,
 			TemplatePath: templatePath,
 			ManifestPath: manifestPath,
 		}
-		deviations = append(deviations, dvn)
+
+		templates = append(templates, dvn)
 	}
 
-	if len(deviations) != len(manifests) {
+	if len(templates) != len(manifests) {
 		resourceFromManifests, err := NewHelmTemplates(manifests).Get()
 		if err != nil {
 			return deviation.DriftedRelease{}, err
 		}
 
-		return deviation.DriftedRelease{}, &errors.NotAllError{Manifests: resourceFromManifests, ResourceFromDeviations: deviations}
+		return deviation.DriftedRelease{}, &errors.NotAllError{Manifests: resourceFromManifests, ResourceFromDeviations: templates}
 	}
 
-	releaseDrifted.Deviations = deviations
+	releaseDrifted.Deviations = templates
 
 	if err := diskProgressBar.Finish(); err != nil {
 		return deviation.DriftedRelease{}, err

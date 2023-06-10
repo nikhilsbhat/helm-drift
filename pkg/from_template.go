@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/nikhilsbhat/helm-drift/pkg/deviation"
+	driftErr "github.com/nikhilsbhat/helm-drift/pkg/errors"
 	"github.com/nikhilsbhat/helm-drift/pkg/k8s"
 	"github.com/sirupsen/logrus"
 	"github.com/thoas/go-funk"
@@ -160,7 +161,21 @@ func (template *HelmTemplate) Get() (deviation.Deviation, error) {
 		return deviation.Deviation{}, err
 	}
 
-	return deviation.Deviation{Resource: name, Kind: kind}, nil
+	dvn := deviation.Deviation{Resource: name, Kind: kind}
+
+	nameSpace, err := k8s.NewResource().GetNameSpace(name, kind, string(*template))
+
+	notFoundErrType := &driftErr.NotFoundError{}
+
+	if errors.Is(err, notFoundErrType) {
+		return deviation.Deviation{}, err
+	}
+
+	if len(nameSpace) != 0 {
+		dvn.NameSpace = nameSpace
+	}
+
+	return dvn, nil
 }
 
 func NewHelmTemplate(template string) *HelmTemplate {
