@@ -26,6 +26,8 @@ func (drift *Drift) getChartFromRelease() ([]byte, error) {
 
 	helmRelease, err := client.Run(drift.release)
 	if err != nil {
+		drift.log.Errorf("fetching helm release '%s' errored with '%v'", drift.release, err)
+
 		return nil, err
 	}
 

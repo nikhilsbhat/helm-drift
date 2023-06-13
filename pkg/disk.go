@@ -7,6 +7,7 @@ import (
 
 	"github.com/nikhilsbhat/helm-drift/pkg/deviation"
 	"github.com/nikhilsbhat/helm-drift/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -18,8 +19,6 @@ func (drift *Drift) renderToDisk(manifests []string, chartName, releaseName, rel
 	manifests = NewHelmTemplates(manifests).FilterBySkip(drift)
 	manifests = NewHelmTemplates(manifests).FilterByKind(drift)
 	manifests = NewHelmTemplates(manifests).FilterByName(drift)
-
-	diskProgressBar := NewProgress(len(manifests), "rendering manifests to disk")
 
 	releaseDrifted := deviation.DriftedRelease{
 		Namespace: releaseNamespace.(string),
@@ -36,18 +35,20 @@ func (drift *Drift) renderToDisk(manifests []string, chartName, releaseName, rel
 	drift.log.Debugf("creating directories '%s' to generate manifests", templatePath)
 
 	if err := os.MkdirAll(templatePath, templatePathPermission); err != nil {
+		log.Errorf("creating template path '%s' errored with '%v'", templatePath, err)
+
 		return releaseDrifted, err
 	}
 
 	templates := make([]deviation.Deviation, 0)
 
 	for _, manifest := range manifests {
-		if err := diskProgressBar.Add(1); err != nil {
-			return deviation.DriftedRelease{}, err
-		}
+		drift.log.Debugf("rendering manifest to disc, hold on for a moment....")
 
 		template, err := NewHelmTemplate(manifest).Get()
 		if err != nil {
+			log.Errorf("getting manifest information from template errored with '%v'", err)
+
 			return deviation.DriftedRelease{}, err
 		}
 
@@ -55,6 +56,8 @@ func (drift *Drift) renderToDisk(manifests []string, chartName, releaseName, rel
 
 		manifestPath := filepath.Join(templatePath, fmt.Sprintf("%s.%s.%s.yaml", template.Resource, template.Kind, releaseName))
 		if err = os.WriteFile(manifestPath, []byte(manifest), manifestFilePermission); err != nil {
+			log.Errorf("writting manifest '%s' to disk errored with '%v'", manifestPath, err)
+
 			return deviation.DriftedRelease{}, err
 		}
 
@@ -74,6 +77,8 @@ func (drift *Drift) renderToDisk(manifests []string, chartName, releaseName, rel
 	if len(templates) != len(manifests) {
 		resourceFromManifests, err := NewHelmTemplates(manifests).Get()
 		if err != nil {
+			log.Errorf("getting manifests information from templates errored with '%v'", err)
+
 			return deviation.DriftedRelease{}, err
 		}
 
@@ -82,9 +87,7 @@ func (drift *Drift) renderToDisk(manifests []string, chartName, releaseName, rel
 
 	releaseDrifted.Deviations = templates
 
-	if err := diskProgressBar.Finish(); err != nil {
-		return deviation.DriftedRelease{}, err
-	}
+	drift.log.Debugf("all manifests from release '%s' was successfully rendered to disk...", releaseName.(string))
 
 	return releaseDrifted, nil
 }
