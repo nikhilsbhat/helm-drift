@@ -12,15 +12,17 @@ The Helm plugin that comes in handy while identifying configuration drifts (most
 
 ## Introduction
 
-Kubernetes' resources can be deployed via the package manager Helm; it is easier to deploy, but managing them requires more effort.
+Resources can be deployed on Kubernetes via the package manager Helm; it is easier to deploy, but managing them requires more effort.
 
 If Helm is used, strictly all resources should be managed by Helm itself, but there are places where manual interventions are needed.</br>
-This results in configuration drift from deployed helm charts..
+This results in configuration drift from deployed helm charts.
 These changes can be overridden by the next helm release, but what if the required changes are lost before adding them back to the helm chart?
 
-This Helm drift plugin is intended to solve the same problem by validating the resources that are part of an appropriate chart or release against Kubernetes.
+This Helm Drift plugin is intended to solve the same problem by validating the resources that are part of an appropriate chart or release against Kubernetes.
 
 This leverages kubectl [diff](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#diff) to identify the drifts.
+
+A [blog](https://medium.com/@nikhilsbhat93/helm-plugin-to-identify-the-configuration-that-has-drifted-away-from-the-deployed-helm-release-72f05d26d8cf) published on the reason for the creation of this plugin.
 
 ### Example
 ```shell
@@ -234,7 +236,7 @@ Updated documentation on all available commands and flags can be found [here](ht
 
 Identifying drifts on `CRDs` would be tricky, and the plugin might not respond with the correct data.
 
-If helm hooks are defined in the chart, one might find drifts always on helm hooks, which are marked with `hook-succeeded` and `hook-failed` when identifying drifts from charts..</br>
+If helm hooks are defined in the chart with `hook-succeeded` or `hook-failed`, one might always find drifts when identifying drifts from charts.</br>
 Things would work perfectly when identifying drifts from the installed release.
 
-Support for adding a `flag` to skip helm `hooks, if required, is under development.
+Support for adding a `flag` to skip helm `hooks` if required, is under development.
