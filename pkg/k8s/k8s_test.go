@@ -9,60 +9,120 @@ import (
 
 type K8sTestSuite struct {
 	suite.Suite
-	resource string
+	resource     string
+	resourceHook string
 }
 
 func (suite *K8sTestSuite) SetupTest() {
 	suite.resource = `apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: sample
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+    meta.helm.sh/release-name: sample
+    meta.helm.sh/release-namespace: sample
   labels:
-    helm.sh/chart: sample-0.1.0
-    app.kubernetes.io/name: sample
     app.kubernetes.io/instance: sample
-    app.kubernetes.io/version: "1.16.0"
     app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: sample
+    app.kubernetes.io/version: 1.16.0
+    helm.sh/chart: sample-0.1.0
+  name: sample
+  namespace: sample
 spec:
+  progressDeadlineSeconds: 600
   replicas: 1
+  revisionHistoryLimit: 10
   selector:
     matchLabels:
-      app.kubernetes.io/name: sample
       app.kubernetes.io/instance: sample
+      app.kubernetes.io/name: sample
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
   template:
     metadata:
+      creationTimestamp: null
       labels:
-        app.kubernetes.io/name: sample
         app.kubernetes.io/instance: sample
+        app.kubernetes.io/name: sample
     spec:
-      serviceAccountName: sample
-      securityContext:
-        { }
       containers:
-        - name: sample
-          securityContext:
-            { }
-          image: "nginx:1.16.0"
-          imagePullPolicy: IfNotPresent
-          ports:
-            - name: http
-              containerPort: 80
-              protocol: TCP
-          livenessProbe:
-            httpGet:
-              path: /
-              port: http
-          readinessProbe:
-            httpGet:
-              path: /
-              port: http
-          resources:
-            { }
-`
+      - image: nginx:1.16.0
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /
+            port: http
+            scheme: HTTP
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        name: sample
+        ports:
+        - containerPort: 80
+          name: http
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /
+            port: http
+            scheme: HTTP
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      serviceAccount: sample
+      serviceAccountName: sample
+      terminationGracePeriodSeconds: 30`
+
+	suite.resourceHook = `apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "sample-hook-succeeded"
+  labels:
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/instance: "sample"
+    app.kubernetes.io/version: 1.16.0
+    helm.sh/chart: "sample-0.1.0"
+  annotations:
+    # This is what defines this resource as a hook. Without this line, the
+    # job is considered part of the release.
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": hook-failed,hook-succeeded
+spec:
+  template:
+    metadata:
+      name: "sample"
+      labels:
+        app.kubernetes.io/managed-by: "Helm"
+        app.kubernetes.io/instance: "sample"
+        helm.sh/chart: "sample-0.1.0"
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: post-install-job
+          image: "alpine:3.3"
+          command: ["/bin/sleep","10"]`
 }
 
 func TestK8sTestSuite(t *testing.T) {
 	suite.Run(t, new(K8sTestSuite))
+}
+
+func (suite *K8sTestSuite) TestResource_GetNameSpace() {
+	name, err := k8s.NewResource().GetNameSpace("sample", "Deployment", suite.resource)
+	suite.NoError(err)
+	suite.Equal("sample", name)
 }
 
 func (suite *K8sTestSuite) TestResource_GetName() {
@@ -75,4 +135,10 @@ func (suite *K8sTestSuite) TestResource_GetKind() {
 	kind, err := k8s.NewResource().GetKind(suite.resource)
 	suite.NoError(err)
 	suite.Equal("Deployment", kind)
+}
+
+func (suite *K8sTestSuite) TestResource_IsHelmHookTrue() {
+	kind, err := k8s.NewResource().IsHelmHook(suite.resourceHook, []string{"hook-succeeded", "hook-failed"})
+	suite.NoError(err)
+	suite.True(kind)
 }

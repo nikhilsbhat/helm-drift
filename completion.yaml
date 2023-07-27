@@ -10,9 +10,11 @@ flags:
 commands:
   - name: run
     flags:
+      - consider-hooks
       - custom-diff
       - disable-error-on-drift
       - from-release
+      - ignore-hooks
       - json
       - kind
       - name
@@ -26,8 +28,10 @@ commands:
       - yaml
   - name: all
     flags:
+      - consider-hooks
       - custom-diff
       - disable-error-on-drift
+      - ignore-hooks
       - is-default-namespace
       - json
       - kind

@@ -130,6 +130,21 @@ func (templates *HelmTemplates) FilterByName(drift *Drift) []string {
 	}).([]string)
 }
 
+func (templates *HelmTemplates) FilterByHelmHook(drift *Drift) []string {
+	if drift.ConsiderHooks {
+		return *templates
+	}
+
+	return funk.Filter(*templates, func(tmpl string) bool {
+		hook, err := k8s.NewResource().IsHelmHook(tmpl, drift.IgnoreHookTypes)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		return !hook
+	}).([]string)
+}
+
 func (templates *HelmTemplates) Get() ([]deviation.Deviation, error) {
 	deviations := make([]deviation.Deviation, 0)
 

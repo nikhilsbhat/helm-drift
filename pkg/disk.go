@@ -16,6 +16,7 @@ const (
 )
 
 func (drift *Drift) renderToDisk(manifests []string, chartName, releaseName, releaseNamespace any) (deviation.DriftedRelease, error) {
+	manifests = NewHelmTemplates(manifests).FilterByHelmHook(drift)
 	manifests = NewHelmTemplates(manifests).FilterBySkip(drift)
 	manifests = NewHelmTemplates(manifests).FilterByKind(drift)
 	manifests = NewHelmTemplates(manifests).FilterByName(drift)
@@ -56,7 +57,7 @@ func (drift *Drift) renderToDisk(manifests []string, chartName, releaseName, rel
 
 		manifestPath := filepath.Join(templatePath, fmt.Sprintf("%s.%s.%s.yaml", template.Resource, template.Kind, releaseName))
 		if err = os.WriteFile(manifestPath, []byte(manifest), manifestFilePermission); err != nil {
-			log.Errorf("writting manifest '%s' to disk errored with '%v'", manifestPath, err)
+			log.Errorf("writing manifest '%s' to disk errored with '%v'", manifestPath, err)
 
 			return deviation.DriftedRelease{}, err
 		}

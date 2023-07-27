@@ -40,8 +40,10 @@ type Drift struct {
 	CustomDiff         string
 	All                bool
 	IsDefaultNamespace bool
+	ConsiderHooks      bool
 	Kind               []string
 	SkipKinds          []string
+	IgnoreHookTypes    []string
 	Name               string
 	release            string
 	chart              string
