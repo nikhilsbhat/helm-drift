@@ -114,6 +114,15 @@ diff -u -N /var/folders/dm/40_kbx_56psgqt29q0wh2cxh0000gq/T/LIVE-2873647491/apps
            protocol: TCP
 -----------
 ```
+
+## Suggestion
+
+Try using the drift plugin with a custom diff tool instead for better results. **Ex**: diff tool, [dyff](https://github.com/homeport/dyff), This can be used by setting the flag `--custom-diff`
+
+```shell
+helm drift run prometheus-standalone -n monitoring --from-release --custom-diff "dyff between --omit-header --set-exit-code"
+```
+
 ## Installation
 
 ```shell
