@@ -9,11 +9,13 @@ linters:
     - exhaustruct
     - forbidigo
     - paralleltest
-    - cyclop
     - ireturn
     - wrapcheck
     - forcetypeassert
     - maligned
+    - depguard
+    - tagalign
+    - dupword
 
 issues:
   exclude-rules:
@@ -27,6 +29,9 @@ issues:
       text: "unnecessaryDefer:"
 
 linters-settings:
+  cyclop:
+    max-complexity: 15
+
   funlen:
     lines: 160
     statements: 48

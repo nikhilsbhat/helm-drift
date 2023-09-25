@@ -20,11 +20,7 @@ func getRootCommand() *cobra.Command {
 		Long:  `Identifies configuration drifts (mostly due to in-place edits) in the Kubernetes workloads provisioned via Helm charts.`,
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmd.Usage(); err != nil {
-				return err
-			}
-
-			return nil
+			return cmd.Usage()
 		},
 	}
 	rootCommand.SetUsageTemplate(getUsageTemplate())
@@ -113,7 +109,7 @@ Do note that this is expensive operation since multiple kubectl command would be
 	return driftCommand
 }
 
-func versionConfig(cmd *cobra.Command, args []string) error {
+func versionConfig(_ *cobra.Command, _ []string) error {
 	buildInfo, err := json.Marshal(version.GetBuildInfo())
 	if err != nil {
 		log.Fatalf("fetching version of helm-version failed with: %v", err)
@@ -121,7 +117,7 @@ func versionConfig(cmd *cobra.Command, args []string) error {
 
 	writer := bufio.NewWriter(os.Stdout)
 	versionInfo := fmt.Sprintf("%s \n", strings.Join([]string{"drift version", string(buildInfo)}, ": "))
-	_, err = writer.Write([]byte(versionInfo))
+	_, err = writer.WriteString(versionInfo)
 
 	if err != nil {
 		log.Fatalln(err)

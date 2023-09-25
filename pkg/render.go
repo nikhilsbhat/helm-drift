@@ -59,7 +59,7 @@ func (drift *Drift) toTABLE(drifts []deviation.DriftedRelease) {
 }
 
 func (drift *Drift) runTable(table *tablewriter.Table, deviations []deviation.DriftedRelease) bool {
-	drifts := deviations[0]
+	drifts := deviations[0] //nolint:gosec
 
 	table.SetHeader([]string{"kind", "name", "drift"})
 
@@ -209,7 +209,7 @@ func (drift *Drift) print(drifts []deviation.DriftedRelease) {
 		os.Exit(0)
 	}
 
-	drfts := drifts[0]
+	drfts := drifts[0] //nolint:gosec
 	deviations := deviation.Deviations(drfts.Deviations)
 	dvn := deviation.DriftedReleases(drifts)
 
