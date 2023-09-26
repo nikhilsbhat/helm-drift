@@ -78,6 +78,56 @@ func (resource *Resource) GetNameSpace(name, kind, dataMap string) (string, erro
 	return "", nil
 }
 
+func isNestedKeyNotNil(data map[string]interface{}, key string) bool {
+	if len(data) == 0 {
+		return false
+	}
+
+	keys := splitKey(key, ".", "\\")
+
+	// Traverse the nested structure
+	for i, k := range keys {
+		value, ok := data[k]
+		if !ok || value == nil {
+			return false
+		}
+		if nestedMap, ok := value.(map[string]interface{}); ok {
+			data = nestedMap
+		} else if i+1 < len(keys) {
+			// Key does not point to a map, so we can't check deeper.
+			return false
+		} else {
+			// Last key is valid and not nil.
+			return true
+		}
+	}
+	return false
+}
+
+func splitKey(key string, delimiter string, escapedchar string) []string {
+	// Split the key using the specified delimiter
+	parts := strings.Split(key, delimiter)
+
+	// Merge any escaped delimiters with the previous part
+	var result []string
+	for i := 0; i < len(parts); i++ {
+		if strings.HasSuffix(parts[i], escapedchar) {
+			// Remove the trailing backslash and merge it with the next part
+			parts[i] = strings.TrimSuffix(parts[i], escapedchar)
+			if i+1 < len(parts) {
+				result = append(result, parts[i]+delimiter+parts[i+1])
+				i++ // Skip the next part
+			} else {
+				// If there's no next part, just append the escaped part
+				result = append(result, parts[i])
+			}
+		} else {
+			result = append(result, parts[i])
+		}
+	}
+	return result
+}
+
 // IsHelmHook gets the namespace form the kubernetes resource.
 func (resource *Resource) IsHelmHook(dataMap string, hookKinds []string) (bool, error) {
 	var kindYaml map[string]interface{}
@@ -85,21 +135,13 @@ func (resource *Resource) IsHelmHook(dataMap string, hookKinds []string) (bool, 
 		return false, err
 	}
 
-	if len(kindYaml) == 0 {
+	if !isNestedKeyNotNil(kindYaml, "metadata.annotations.helm\\.sh/hook") || !isNestedKeyNotNil(kindYaml, "metadata.annotations.helm\\.sh/hook-delete-policy") {
 		return false, nil
-	}
-
-	if _, failedManifest := kindYaml["metadata"].(map[string]interface{})["annotations"]; !failedManifest {
-		return false, nil
-	}
-
-	if _, failedManifest := kindYaml["metadata"].(map[string]interface{})["annotations"].(map[string]interface{})["helm.sh/hook"].(string); !failedManifest {
-		return false, &errors.NotFoundError{Key: "failed to identify the manifest as chart hook"}
 	}
 
 	hookType, failedManifest := kindYaml["metadata"].(map[string]interface{})["annotations"].(map[string]interface{})["helm.sh/hook-delete-policy"].(string)
 	if !failedManifest {
-		return false, &errors.NotFoundError{Key: "failed to identify the the chart hook type from the manifest"}
+		return false, nil
 	}
 
 	hookType = strings.TrimSpace(hookType)
