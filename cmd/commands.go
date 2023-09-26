@@ -13,6 +13,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var envSettings *EnvSettings
+
 func getRootCommand() *cobra.Command {
 	rootCommand := &cobra.Command{
 		Use:   "drift [command]",
@@ -24,6 +26,7 @@ func getRootCommand() *cobra.Command {
 		},
 	}
 	rootCommand.SetUsageTemplate(getUsageTemplate())
+	envSettings = envSettings.New()
 
 	return rootCommand
 }
@@ -49,6 +52,10 @@ func getRunCommand() *cobra.Command {
 			drifts.SetLogger(drifts.LogLevel)
 			drifts.SetWriter(os.Stdout)
 			cmd.SilenceUsage = true
+
+			drifts.SetKubeConfig(envSettings.KubeConfig)
+			drifts.SetKubeContext(envSettings.KubeContext)
+			drifts.SetNamespace(envSettings.Namespace)
 
 			drifts.SetRelease(args[0])
 			if !drifts.FromRelease {
@@ -87,6 +94,10 @@ Do note that this is expensive operation since multiple kubectl command would be
 			drifts.SetLogger(drifts.LogLevel)
 			drifts.SetWriter(os.Stdout)
 			cmd.SilenceUsage = true
+
+			drifts.SetKubeConfig(envSettings.KubeConfig)
+			drifts.SetKubeContext(envSettings.KubeContext)
+			drifts.SetNamespace(envSettings.Namespace)
 
 			if !drifts.SkipValidation {
 				if !drifts.ValidatePrerequisite() {

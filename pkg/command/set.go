@@ -4,39 +4,17 @@ package command
 import (
 	"fmt"
 	"os"
-	"path/filepath"
-
-	"k8s.io/client-go/util/homedir"
 )
 
 // SetKubeCmd sets the kubectl command with all predefined arguments.
-func (cmd *command) SetKubeCmd(namespace string, args ...string) {
-	cmd.baseCmd.Env = cmd.prepareKubeEnvironments()
+func (cmd *command) SetKubeCmd(kubeConfig string, kubeContext string, namespace string, args ...string) {
+	cmd.baseCmd.Env = os.Environ()
 	cmd.baseCmd.Args = append(cmd.baseCmd.Args, "diff")
 	cmd.baseCmd.Args = append(cmd.baseCmd.Args, args...)
 	cmd.baseCmd.Args = append(cmd.baseCmd.Args, cmd.getNamespace(namespace))
-
-	if len(setContext()) != 0 {
-		cmd.baseCmd.Args = append(cmd.baseCmd.Args, setContext())
-	}
+	cmd.baseCmd.Args = append(cmd.baseCmd.Args, getContext(kubeConfig, kubeContext)...)
 
 	cmd.log.Debugf("running command '%s' to find diff", cmd.baseCmd.String())
-}
-
-func (cmd *command) prepareKubeEnvironments() []string {
-	config := os.Getenv(KubeConfig)
-
-	var envs []string
-
-	if len(config) != 0 {
-		envs = append(envs, constructEnv(KubeConfig, config))
-	} else {
-		envs = append(envs, constructEnv(KubeConfig, filepath.Join(homedir.HomeDir(), ".kube", "config")))
-	}
-
-	envs = append(envs, os.Environ()...)
-
-	return envs
 }
 
 func (cmd *command) getNamespace(nameSpace string) string {
@@ -47,11 +25,15 @@ func constructEnv(key, value string) string {
 	return fmt.Sprintf("%s=%s", key, value)
 }
 
-func setContext() string {
-	kubeContext := os.Getenv(HelmContext)
+func getContext(kubeConfig string, kubeContext string) []string {
+	cmds := []string{}
 	if len(kubeContext) != 0 {
-		return fmt.Sprintf("--context=%s", kubeContext)
+		cmds = append(cmds, fmt.Sprintf("--context=%s", kubeContext))
 	}
 
-	return kubeContext
+	if len(kubeConfig) != 0 {
+		cmds = append(cmds, fmt.Sprintf("--kubeconfig=%s", kubeConfig))
+	}
+
+	return cmds
 }

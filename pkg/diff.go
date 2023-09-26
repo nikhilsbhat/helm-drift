@@ -41,7 +41,7 @@ func (drift *Drift) Diff(renderedManifests deviation.DriftedRelease) (deviation.
 			nameSpace := drift.setNameSpace(renderedManifests, dvn)
 			drift.log.Debugf("setting namespace to %s", nameSpace)
 
-			cmd.SetKubeCmd(nameSpace, arguments...)
+			cmd.SetKubeCmd(drift.kubeConfig, drift.kubeContext, nameSpace, arguments...)
 
 			dft, err := cmd.RunKubeCmd(dvn)
 			if err != nil {
