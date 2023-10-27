@@ -26,6 +26,7 @@ func getRootCommand() *cobra.Command {
 		},
 	}
 	rootCommand.SetUsageTemplate(getUsageTemplate())
+
 	envSettings = envSettings.New()
 
 	return rootCommand

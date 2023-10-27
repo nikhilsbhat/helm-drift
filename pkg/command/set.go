@@ -21,10 +21,6 @@ func (cmd *command) getNamespace(nameSpace string) string {
 	return fmt.Sprintf("-n=%s", nameSpace)
 }
 
-func constructEnv(key, value string) string {
-	return fmt.Sprintf("%s=%s", key, value)
-}
-
 func getContext(kubeConfig string, kubeContext string) []string {
 	cmds := []string{}
 	if len(kubeContext) != 0 {

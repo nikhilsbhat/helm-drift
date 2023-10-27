@@ -86,11 +86,12 @@ func isNestedKeyNotNil(data map[string]interface{}, key string) bool {
 	keys := splitKey(key, ".", "\\")
 
 	// Traverse the nested structure
-	for i, k := range keys {
+	for i, k := range keys { //nolint:varnamelen
 		value, ok := data[k]
 		if !ok || value == nil {
 			return false
 		}
+
 		if nestedMap, ok := value.(map[string]interface{}); ok {
 			data = nestedMap
 		} else if i+1 < len(keys) {
@@ -101,6 +102,7 @@ func isNestedKeyNotNil(data map[string]interface{}, key string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -110,7 +112,8 @@ func splitKey(key string, delimiter string, escapedchar string) []string {
 
 	// Merge any escaped delimiters with the previous part
 	var result []string
-	for i := 0; i < len(parts); i++ {
+
+	for i := 0; i < len(parts); i++ { //nolint:varnamelen
 		if strings.HasSuffix(parts[i], escapedchar) {
 			// Remove the trailing backslash and merge it with the next part
 			parts[i] = strings.TrimSuffix(parts[i], escapedchar)
@@ -125,6 +128,7 @@ func splitKey(key string, delimiter string, escapedchar string) []string {
 			result = append(result, parts[i])
 		}
 	}
+
 	return result
 }
 

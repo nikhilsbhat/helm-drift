@@ -28,7 +28,7 @@ local.fmt: ## Lints all the go code in the application.
 	gofmt -w $(GOFMT_FILES)
 	$(GOBIN)/goimports -w $(GOFMT_FILES)
 	$(GOBIN)/gofumpt -l -w $(GOFMT_FILES)
-	$(GOBIN)/gci write $(GOFMT_FILES) --skip-generated
+	$(GOBIN)/gci write $(GOFMT_FILES) --skip-generated -s standard -s default
 
 local.check: local.fmt ## Loads all the dependencies to vendor directory
 	go mod vendor

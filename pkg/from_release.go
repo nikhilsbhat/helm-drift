@@ -24,7 +24,7 @@ func (drift *Drift) getChartFromRelease() ([]byte, error) {
 		settings.KubeContext = kubeContext
 	}
 
-	kubeConfig := drift.kubeConfig
+	kubeConfig := drift.kubeConfig //nolint:ifshort
 	if len(kubeConfig) != 0 {
 		settings.KubeConfig = kubeConfig
 	}

@@ -13,13 +13,14 @@ type EnvSettings struct {
 }
 
 func (s *EnvSettings) New() *EnvSettings {
-	envSettings := EnvSettings{
+	envSetting := EnvSettings{
 		Namespace:   os.Getenv("HELM_NAMESPACE"),
 		KubeContext: os.Getenv("HELM_KUBECONTEXT"),
 		KubeConfig:  os.Getenv("KUBECONFIG"),
 	}
-	return &envSettings
+
+	return &envSetting
 }
 
-func (s *EnvSettings) AddFlags(fs *pflag.FlagSet) {
+func (s *EnvSettings) AddFlags(_ *pflag.FlagSet) {
 }
