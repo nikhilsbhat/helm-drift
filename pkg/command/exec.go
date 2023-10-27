@@ -9,15 +9,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const (
-	HelmContext   = "HELM_KUBECONTEXT"
-	HelmNamespace = "HELM_NAMESPACE"
-	KubeConfig    = "KUBECONFIG"
-)
-
 // Exec implements methods that set's and run's the kubectl command.
 type Exec interface {
-	SetKubeCmd(namespace string, args ...string)
+	SetKubeCmd(kubeConfig string, kubeContext string, namespace string, args ...string)
 	RunKubeCmd(deviation deviation.Deviation) (deviation.Deviation, error)
 }
 

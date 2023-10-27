@@ -20,8 +20,6 @@ func (drift *Drift) GetAllDrift() {
 
 	drift.log.Debugf("got all required values to identify drifts from chart/release '%s' proceeding furter to fetch the same", drift.release)
 
-	drift.setReleaseNameSpace()
-
 	if err := drift.setExternalDiff(); err != nil {
 		drift.log.Fatalf("%v", err)
 	}

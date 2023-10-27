@@ -4,12 +4,12 @@ import (
 	"bufio"
 	"io"
 	"os"
-	"strings"
+	"path/filepath"
 	"time"
 
-	"github.com/nikhilsbhat/helm-drift/pkg/command"
 	"github.com/nikhilsbhat/helm-drift/pkg/deviation"
 	"github.com/sirupsen/logrus"
+	"k8s.io/client-go/util/homedir"
 )
 
 const (
@@ -48,6 +48,8 @@ type Drift struct {
 	release            string
 	chart              string
 	namespace          string
+	kubeConfig         string
+	kubeContext        string
 	timeSpent          float64
 	log                *logrus.Logger
 	writer             *bufio.Writer
@@ -77,8 +79,6 @@ func (drift *Drift) GetDrift() {
 	}
 
 	drift.log.Debugf("got all required values to identify drifts from chart/release '%s' proceeding furter to fetch the same", drift.release)
-
-	drift.setReleaseNameSpace()
 
 	if err := drift.setExternalDiff(); err != nil {
 		drift.log.Fatalf("%v", err)
@@ -134,8 +134,22 @@ func (drift *Drift) getChartManifests() ([]byte, error) {
 	return drift.getChartFromTemplate()
 }
 
-func (drift *Drift) setReleaseNameSpace() {
-	drift.namespace = strings.TrimSpace(os.Getenv(command.HelmNamespace))
+func (drift *Drift) SetNamespace(namespace string) {
+	drift.namespace = namespace
+	if len(drift.namespace) == 0 {
+		drift.namespace = "default"
+	}
+}
+
+func (drift *Drift) SetKubeConfig(kubeConfig string) {
+	drift.kubeConfig = kubeConfig
+	if len(drift.kubeConfig) == 0 {
+		drift.kubeConfig = filepath.Join(homedir.HomeDir(), ".kube", "config")
+	}
+}
+
+func (drift *Drift) SetKubeContext(kubeContext string) {
+	drift.kubeContext = kubeContext
 }
 
 func (drift *Drift) setExternalDiff() error {
