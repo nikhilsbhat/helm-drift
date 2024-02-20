@@ -25,6 +25,8 @@ func registerFlags(cmd *cobra.Command) {
 		"log level for the plugin helm drift (defaults to info)")
 	cmd.PersistentFlags().BoolVarP(&drifts.NoColor, "no-color", "", false,
 		"enabling this would render summary with no color")
+	cmd.PersistentFlags().BoolVarP(&drifts.New, "new", "", false,
+		"use new diff strategy")
 }
 
 // Registers flags to support command run/all.

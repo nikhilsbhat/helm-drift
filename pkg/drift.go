@@ -41,6 +41,7 @@ type Drift struct {
 	All                bool
 	IsDefaultNamespace bool
 	ConsiderHooks      bool
+	New                bool
 	Kind               []string
 	SkipKinds          []string
 	IgnoreHookTypes    []string
@@ -103,6 +104,15 @@ func (drift *Drift) GetDrift() {
 	}(drift)
 
 	var driftedReleases []deviation.DriftedRelease
+
+	if drift.New {
+		_, err = drift.NewDiff(renderedManifests)
+		if err != nil {
+			drift.log.Fatalf("%v", err)
+		}
+
+		return
+	}
 
 	out, err := drift.Diff(renderedManifests)
 	if err != nil {

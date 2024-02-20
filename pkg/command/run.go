@@ -9,15 +9,15 @@ import (
 	"github.com/nikhilsbhat/helm-drift/pkg/deviation"
 )
 
-// RunKubeCmd runs the kubectl command with all predefined arguments.
-func (cmd *command) RunKubeCmd(deviation deviation.Deviation) (deviation.Deviation, error) {
+// RunKubeDiffCmd runs the kubectl command with all predefined arguments.
+func (cmd *command) RunKubeDiffCmd(deviation deviation.Deviation) (deviation.Deviation, error) {
 	cmd.log.Debugf("envionment variables that would be used: %v", cmd.baseCmd.Environ())
 
 	out, err := cmd.baseCmd.CombinedOutput()
 	if err != nil {
-		var exerr *exec.ExitError
-		if errors.As(err, &exerr) {
-			switch exerr.ExitCode() {
+		var exitError *exec.ExitError
+		if errors.As(err, &exitError) {
+			switch exitError.ExitCode() {
 			case 1:
 				deviation.HasDrift = true
 				deviation.Deviations = string(out)
@@ -31,4 +31,16 @@ func (cmd *command) RunKubeCmd(deviation deviation.Deviation) (deviation.Deviati
 	}
 
 	return deviation, nil
+}
+
+func (cmd *command) RunKubeGetCmd(deviation deviation.Deviation) ([]byte, error) {
+	cmd.log.Debugf("envionment variables that would be used: %v", cmd.baseCmd.Environ())
+
+	out, err := cmd.baseCmd.CombinedOutput()
+	if err != nil {
+		cmd.log.Errorf("fetching manifests for '%s' with name '%s' erroreed with: '%s'", deviation.Kind, deviation.Kind, string(out))
+		return nil, err
+	}
+
+	return out, nil
 }

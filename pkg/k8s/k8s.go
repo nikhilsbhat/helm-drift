@@ -28,16 +28,16 @@ func (resource *Resource) GetName(dataMap string) (string, error) {
 		return "", err
 	}
 
-	if len(kindYaml) != 0 {
-		value, failedManifest := kindYaml["metadata"].(map[string]interface{})["name"].(string)
-		if !failedManifest {
-			return "", &errors.DriftError{Message: "failed to get name from the manifest, 'name' is not type string"}
-		}
-
-		return value, nil
+	if len(kindYaml) == 0 {
+		return "", nil
 	}
 
-	return "", nil
+	value, failedManifest := kindYaml["metadata"].(map[string]interface{})["name"].(string)
+	if !failedManifest {
+		return "", &errors.DriftError{Message: "failed to get name from the manifest, 'name' is not type string"}
+	}
+
+	return value, nil
 }
 
 // GetKind helps in identifying kind form the kubernetes resource.
@@ -47,16 +47,16 @@ func (resource *Resource) GetKind(dataMap string) (string, error) {
 		return "", err
 	}
 
-	if len(kindYaml) != 0 {
-		value, failedManifest := kindYaml["kind"].(string)
-		if !failedManifest {
-			return "", &errors.DriftError{Message: "failed to get kube kind from the manifest, 'kind' is not type string"}
-		}
-
-		return value, nil
+	if len(kindYaml) == 0 {
+		return "", nil
 	}
 
-	return "", nil
+	value, failedManifest := kindYaml["kind"].(string)
+	if !failedManifest {
+		return "", &errors.DriftError{Message: "failed to get kube kind from the manifest, 'kind' is not type string"}
+	}
+
+	return value, nil
 }
 
 // GetNameSpace gets the namespace form the kubernetes resource.
@@ -66,16 +66,16 @@ func (resource *Resource) GetNameSpace(name, kind, dataMap string) (string, erro
 		return "", err
 	}
 
-	if len(kindYaml) != 0 {
-		value, failedManifest := kindYaml["metadata"].(map[string]interface{})["namespace"].(string)
-		if !failedManifest {
-			return "", &errors.NotFoundError{Key: "namespace", Manifest: fmt.Sprintf("%s/%s", name, kind)}
-		}
-
-		return value, nil
+	if len(kindYaml) == 0 {
+		return "", nil
 	}
 
-	return "", nil
+	value, failedManifest := kindYaml["metadata"].(map[string]interface{})["namespace"].(string)
+	if !failedManifest {
+		return "", &errors.NotFoundError{Key: "namespace", Manifest: fmt.Sprintf("%s/%s", name, kind)}
+	}
+
+	return value, nil
 }
 
 func isNestedKeyNotNil(data map[string]interface{}, key string) bool {

@@ -23,6 +23,7 @@ type DriftedRelease struct {
 
 // Deviation holds drift information of all manifests from the selected release/chart.
 type Deviation struct {
+	Name         string `json:"name,omitempty" yaml:"name,omitempty"`
 	NameSpace    string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
 	Deviations   string `json:"deviations,omitempty" yaml:"deviations,omitempty"`
 	HasDrift     bool   `json:"has_drift,omitempty" yaml:"has_drift,omitempty"`
