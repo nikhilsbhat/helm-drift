@@ -65,7 +65,7 @@ func getRunCommand() *cobra.Command {
 
 			if !drifts.SkipValidation {
 				if !drifts.ValidatePrerequisite() {
-					return &errors.PreValidationError{Message: "validation failed, please install prerequisites to identify drifts"}
+					return &errors.PreValidationError{Message: "validation failed, please address the prerequisite errors to identify drifts"}
 				}
 			}
 
@@ -102,7 +102,7 @@ Do note that this is expensive operation since multiple kubectl command would be
 
 			if !drifts.SkipValidation {
 				if !drifts.ValidatePrerequisite() {
-					return &errors.PreValidationError{Message: "validation failed, please install prerequisites to identify drifts"}
+					return &errors.PreValidationError{Message: "validation failed, please address the prerequisite errors to identify drifts"}
 				}
 			}
 

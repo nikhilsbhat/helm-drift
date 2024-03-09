@@ -7,6 +7,7 @@ import (
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/release"
+
 	// Import to initialize client auth plugins.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
@@ -24,9 +25,8 @@ func (drift *Drift) getChartFromRelease() ([]byte, error) {
 		settings.KubeContext = kubeContext
 	}
 
-	kubeConfig := drift.kubeConfig //nolint:ifshort
-	if len(kubeConfig) != 0 {
-		settings.KubeConfig = kubeConfig
+	if len(drift.kubeConfig) != 0 {
+		settings.KubeConfig = drift.kubeConfig
 	}
 
 	if err := actionConfig.Init(settings.RESTClientGetter(), settings.Namespace(), os.Getenv("HELM_DRIVER"), log.Printf); err != nil {
