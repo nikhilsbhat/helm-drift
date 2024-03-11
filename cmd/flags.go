@@ -25,6 +25,13 @@ func registerFlags(cmd *cobra.Command) {
 		"log level for the plugin helm drift (defaults to info)")
 	cmd.PersistentFlags().BoolVarP(&drifts.NoColor, "no-color", "", false,
 		"enabling this would render summary with no color")
+	cmd.PersistentFlags().BoolVarP(&drifts.SkipCRDS, "skip-crds", "", false,
+		"setting this would set '--skip-crds' for helm template command while generating templates")
+	cmd.PersistentFlags().BoolVarP(&drifts.Validate, "validate", "", false,
+		"setting this would set '--validate' for helm template command while generating templates")
+	cmd.PersistentFlags().StringVarP(&drifts.Version, "version", "", "",
+		"specify a version constraint for the chart version to use, the value passed here would be used to set "+
+			"--version for helm template command while generating templates")
 }
 
 // Registers flags to support command run/all.
