@@ -6,7 +6,10 @@ flags:
   - set-file
   - set-string
   - skip-tests
+  - skip-crds
   - values
+  - version
+  - validate
 commands:
   - name: run
     flags:
