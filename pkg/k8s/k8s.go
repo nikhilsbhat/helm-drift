@@ -6,7 +6,7 @@ import (
 
 	"github.com/nikhilsbhat/helm-drift/pkg/errors"
 	"github.com/thoas/go-funk"
-	"gopkg.in/yaml.v3"
+	"sigs.k8s.io/yaml"
 )
 
 type (
