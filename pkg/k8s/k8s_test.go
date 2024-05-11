@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/nikhilsbhat/helm-drift/pkg/k8s"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -120,19 +121,19 @@ func TestK8sTestSuite(t *testing.T) {
 }
 
 func (suite *K8sTestSuite) TestResource_GetNameSpace() {
-	name, err := k8s.NewResource().GetNameSpace("sample", "Deployment", suite.resource)
+	name, err := k8s.NewResource().GetNameSpace("sample", "Deployment", suite.resource, logrus.New())
 	suite.NoError(err)
 	suite.Equal("sample", name)
 }
 
 func (suite *K8sTestSuite) TestResource_GetName() {
-	name, err := k8s.NewResource().GetName(suite.resource)
+	name, err := k8s.NewResource().GetName(suite.resource, nil)
 	suite.NoError(err)
 	suite.Equal("sample", name)
 }
 
 func (suite *K8sTestSuite) TestResource_GetKind() {
-	kind, err := k8s.NewResource().GetKind(suite.resource)
+	kind, err := k8s.NewResource().GetKind(suite.resource, nil)
 	suite.NoError(err)
 	suite.Equal("Deployment", kind)
 }

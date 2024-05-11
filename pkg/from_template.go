@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/nikhilsbhat/helm-drift/pkg/deviation"
-	driftErr "github.com/nikhilsbhat/helm-drift/pkg/errors"
+	driftError "github.com/nikhilsbhat/helm-drift/pkg/errors"
 	"github.com/nikhilsbhat/helm-drift/pkg/k8s"
 	"github.com/sirupsen/logrus"
 	"github.com/thoas/go-funk"
@@ -103,7 +103,7 @@ func (templates *HelmTemplates) FilterBySkip(drift *Drift) []string {
 			return true
 		}
 
-		kind, err := k8s.NewResource().GetKind(tmpl)
+		kind, err := k8s.NewResource().GetKind(tmpl, nil)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -118,7 +118,7 @@ func (templates *HelmTemplates) FilterByKind(drift *Drift) []string {
 			return true
 		}
 
-		kind, err := k8s.NewResource().GetKind(tmpl)
+		kind, err := k8s.NewResource().GetKind(tmpl, drift.log)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -133,7 +133,7 @@ func (templates *HelmTemplates) FilterByName(drift *Drift) []string {
 			return true
 		}
 
-		name, err := k8s.NewResource().GetName(tmpl)
+		name, err := k8s.NewResource().GetName(tmpl, drift.log)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -157,16 +157,16 @@ func (templates *HelmTemplates) FilterByHelmHook(drift *Drift) []string {
 	}).([]string)
 }
 
-func (templates *HelmTemplates) Get() ([]deviation.Deviation, error) {
+func (templates *HelmTemplates) Get(log *logrus.Logger) ([]deviation.Deviation, error) {
 	deviations := make([]deviation.Deviation, 0)
 
 	for _, manifest := range *templates {
-		name, err := k8s.NewResource().GetName(manifest)
+		name, err := k8s.NewResource().GetName(manifest, log)
 		if err != nil {
 			return nil, err
 		}
 
-		kind, err := k8s.NewResource().GetKind(manifest)
+		kind, err := k8s.NewResource().GetKind(manifest, log)
 		if err != nil {
 			return nil, err
 		}
@@ -177,22 +177,22 @@ func (templates *HelmTemplates) Get() ([]deviation.Deviation, error) {
 	return deviations, nil
 }
 
-func (template *HelmTemplate) Get() (deviation.Deviation, error) {
-	name, err := k8s.NewResource().GetName(string(*template))
+func (template *HelmTemplate) Get(log *logrus.Logger) (deviation.Deviation, error) {
+	name, err := k8s.NewResource().GetName(string(*template), log)
 	if err != nil {
 		return deviation.Deviation{}, err
 	}
 
-	kind, err := k8s.NewResource().GetKind(string(*template))
+	kind, err := k8s.NewResource().GetKind(string(*template), log)
 	if err != nil {
 		return deviation.Deviation{}, err
 	}
 
 	dvn := deviation.Deviation{Resource: name, Kind: kind}
 
-	nameSpace, err := k8s.NewResource().GetNameSpace(name, kind, string(*template))
+	nameSpace, err := k8s.NewResource().GetNameSpace(name, kind, string(*template), log)
 
-	notFoundErrType := &driftErr.NotFoundError{}
+	notFoundErrType := &driftError.NotFoundError{}
 
 	if errors.Is(err, notFoundErrType) {
 		return deviation.Deviation{}, err

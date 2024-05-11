@@ -46,7 +46,7 @@ func (drift *Drift) renderToDisk(manifests []string, chartName, releaseName, rel
 	for _, manifest := range manifests {
 		drift.log.Debugf("rendering manifest to disc, hold on for a moment....")
 
-		template, err := NewHelmTemplate(manifest).Get()
+		template, err := NewHelmTemplate(manifest).Get(drift.log)
 		if err != nil {
 			log.Errorf("getting manifest information from template errored with '%v'", err)
 
@@ -76,7 +76,7 @@ func (drift *Drift) renderToDisk(manifests []string, chartName, releaseName, rel
 	}
 
 	if len(templates) != len(manifests) {
-		resourceFromManifests, err := NewHelmTemplates(manifests).Get()
+		resourceFromManifests, err := NewHelmTemplates(manifests).Get(drift.log)
 		if err != nil {
 			log.Errorf("getting manifests information from templates errored with '%v'", err)
 

@@ -11,13 +11,11 @@ import (
 )
 
 func (drift *Drift) Diff(renderedManifests deviation.DriftedRelease) (deviation.DriftedRelease, error) {
-	diffs := make([]deviation.Deviation, 0)
-
-	var drifted bool
-
-	var waitGroup sync.WaitGroup
-
-	errChan := make(chan error)
+	var (
+		waitGroup sync.WaitGroup
+		errChan   = make(chan error, len(renderedManifests.Deviations))
+		diffs     = make([]deviation.Deviation, len(renderedManifests.Deviations))
+	)
 
 	waitGroup.Add(len(renderedManifests.Deviations))
 
@@ -49,7 +47,7 @@ func (drift *Drift) Diff(renderedManifests deviation.DriftedRelease) (deviation.
 			}
 
 			if dft.HasDrift {
-				drifted = dft.HasDrift
+				renderedManifests.HasDrift = true
 			}
 
 			diffs = append(diffs, dft)
@@ -69,7 +67,6 @@ func (drift *Drift) Diff(renderedManifests deviation.DriftedRelease) (deviation.
 	}
 
 	renderedManifests.Deviations = diffs
-	renderedManifests.HasDrift = drifted
 
 	drift.log.Debugf("ran diffs for all manifests for release '%s' successfully", renderedManifests.Release)
 

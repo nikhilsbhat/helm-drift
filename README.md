@@ -12,17 +12,13 @@ The Helm plugin that comes in handy while identifying configuration drifts (most
 
 ## Introduction
 
-Resources can be deployed on Kubernetes via the package manager Helm; it is easier to deploy, but managing them requires more effort.
+Deploying resources on Kubernetes through the Helm package manager offers simplicity, but maintaining them can be challenging.
 
-If Helm is used, strictly all resources should be managed by Helm itself, but there are places where manual interventions are needed.</br>
-This results in configuration drift from deployed helm charts.
-These changes can be overridden by the next helm release, but what if the required changes are lost before adding them back to the helm chart?
+While Helm ideally manages all resources, manual interventions are sometimes necessary, leading to configuration discrepancies from the deployed Helm charts. </br>These changes risk being overwritten by subsequent Helm releases, potentially resulting in lost configurations.
 
-This Helm Drift plugin is intended to solve the same problem by validating the resources that are part of an appropriate chart or release against Kubernetes.
+The Helm Drift plugin aims to address this issue by validating resources associated with a specific chart or release against Kubernetes. Leveraging kubectl [diff](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#diff) functionality, it identifies any discrepancies or drifts in configurations.
 
-This leverages kubectl [diff](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#diff) to identify the drifts.
-
-A [blog](https://medium.com/@nikhilsbhat93/helm-plugin-to-identify-the-configuration-that-has-drifted-away-from-the-deployed-helm-release-72f05d26d8cf) published on the reason for the creation of this plugin.
+For further insights into the motivation behind creating this plugin, check out the accompanying blog post [blog](https://medium.com/@nikhilsbhat93/helm-plugin-to-identify-the-configuration-that-has-drifted-away-from-the-deployed-helm-release-72f05d26d8cf).
 
 ### Example
 ```shell
