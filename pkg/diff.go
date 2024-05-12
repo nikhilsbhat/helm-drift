@@ -34,23 +34,49 @@ func (drift *Drift) Diff(renderedManifests deviation.DriftedRelease) (deviation.
 
 			arguments := []string{fmt.Sprintf("-f=%s", manifestPath)}
 
-			cmd := command.NewCommand("kubectl", drift.log)
-
 			nameSpace := drift.setNameSpace(renderedManifests, dvn)
 			drift.log.Debugf("setting namespace to %s", nameSpace)
+
+			isManagedByHPA, err := drift.IsManagedByHPA(dvn.Resource, dvn.Kind, nameSpace)
+			if err != nil {
+				drift.log.Error(err)
+
+				errChan <- err
+			}
+
+			cmd := command.NewCommand("kubectl", drift.log)
 
 			cmd.SetKubeCmd(drift.kubeConfig, drift.kubeContext, nameSpace, arguments...)
 
 			dft, err := cmd.RunKubeCmd(dvn)
 			if err != nil {
+				drift.log.Error(err)
+
 				errChan <- err
 			}
 
-			if dft.HasDrift {
-				renderedManifests.HasDrift = true
+			if !isManagedByHPA {
+				if dft.HasDrift {
+					renderedManifests.HasDrift = true
+				}
+
+				diffs[index] = dft
+
+				return
 			}
 
-			diffs[index] = dft
+			wasHpaScaled, err := drift.WasScaledByHpa(dft.Deviations)
+			if err != nil {
+				drift.log.Error(err)
+
+				errChan <- err
+			}
+
+			if dft.HasDrift && !wasHpaScaled {
+				renderedManifests.HasDrift = true
+
+				diffs[index] = dft
+			}
 		}(index, dvn)
 	}
 
