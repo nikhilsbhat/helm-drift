@@ -52,6 +52,10 @@ func (drift *Drift) getChartFromTemplate() ([]byte, error) {
 		flags = append(flags, "--skip-crds")
 	}
 
+	if !drift.SkipCRDS {
+		flags = append(flags, "--include-crds")
+	}
+
 	if drift.Validate {
 		flags = append(flags, "--validate")
 	}
