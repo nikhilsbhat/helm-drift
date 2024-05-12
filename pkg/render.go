@@ -10,7 +10,7 @@ import (
 
 	"github.com/nikhilsbhat/helm-drift/pkg/deviation"
 	"github.com/olekukonko/tablewriter"
-	"gopkg.in/yaml.v3"
+	"sigs.k8s.io/yaml"
 )
 
 func (drift *Drift) render(drifts []deviation.DriftedRelease) error {

@@ -25,6 +25,7 @@ metadata:
   labels:
     app.kubernetes.io/instance: sample
     app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/managed-by: helm
     app.kubernetes.io/name: sample
     app.kubernetes.io/version: 1.16.0
     helm.sh/chart: sample-0.1.0
