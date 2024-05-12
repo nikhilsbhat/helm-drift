@@ -105,8 +105,6 @@ func (drift *Drift) GetDrift() {
 		}
 	}(drift)
 
-	var driftedReleases []deviation.DriftedRelease
-
 	out, err := drift.Diff(renderedManifests)
 	if err != nil {
 		drift.log.Fatalf("%v", err)
@@ -115,11 +113,9 @@ func (drift *Drift) GetDrift() {
 	if len(out.Deviations) == 0 {
 		drift.log.Info("no drifts were identified")
 	} else {
-		driftedReleases = append(driftedReleases, out)
-
 		drift.timeSpent = time.Since(startTime).Seconds()
 
-		if err = drift.render(driftedReleases); err != nil {
+		if err = drift.render([]deviation.DriftedRelease{out}); err != nil {
 			drift.log.Fatalf("%v", err)
 		}
 	}

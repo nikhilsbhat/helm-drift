@@ -24,8 +24,8 @@ func (drift *Drift) Diff(renderedManifests deviation.DriftedRelease) (deviation.
 		close(errChan)
 	}()
 
-	for _, dvn := range renderedManifests.Deviations {
-		go func(dvn deviation.Deviation) {
+	for index, dvn := range renderedManifests.Deviations {
+		go func(index int, dvn deviation.Deviation) {
 			defer waitGroup.Done()
 
 			manifestPath := dvn.ManifestPath
@@ -50,8 +50,8 @@ func (drift *Drift) Diff(renderedManifests deviation.DriftedRelease) (deviation.
 				renderedManifests.HasDrift = true
 			}
 
-			diffs = append(diffs, dft)
-		}(dvn)
+			diffs[index] = dft
+		}(index, dvn)
 	}
 
 	var diffErrors []string
