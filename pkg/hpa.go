@@ -3,23 +3,26 @@ package pkg
 import (
 	"bufio"
 	"context"
+	"fmt"
 	"strings"
 
+	"github.com/nikhilsbhat/helm-drift/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
 func (drift *Drift) IsManagedByHPA(name, kind, nameSpace string) (bool, error) {
-	config, err := clientcmd.BuildConfigFromFlags("", drift.kubeConfig)
+	config, err := buildConfigWithContextFromFlags(drift.kubeContext, drift.kubeConfig)
 	if err != nil {
-		panic(err.Error())
+		return false, &errors.DriftError{Message: fmt.Sprintf("building config with context errored with '%v'", err)}
 	}
 
 	// Create a Kubernetes clientset
 	clientSet, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		panic(err.Error())
+		return false, &errors.DriftError{Message: fmt.Sprintf("creating kubernetes clientsets errored with '%v'", err)}
 	}
 
 	response, err := clientSet.AutoscalingV2().HorizontalPodAutoscalers(nameSpace).
@@ -32,17 +35,23 @@ func (drift *Drift) IsManagedByHPA(name, kind, nameSpace string) (bool, error) {
 
 	for _, item := range response.Items {
 		if item.Spec.ScaleTargetRef.Name == name && item.Spec.ScaleTargetRef.Kind == kind {
-			drift.log.Debugf("the '%s' '%s' is managed by hpa so enabling '--server-side=true'", kind, name)
+			drift.log.Debugf("the '%s' '%s' is managed by hpa hence the drifts for this would be suppressed if enabled", item.Kind, item.Name)
 
 			isManagedByHPA = true
 
 			break
 		}
-
-		drift.log.Debugf("looks like the '%s' '%s' is not managed by hpa hence not setting additional '--field-manager'", kind, name)
 	}
 
 	return isManagedByHPA, nil
+}
+
+func buildConfigWithContextFromFlags(context string, kubeConfigPath string) (*rest.Config, error) {
+	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		&clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeConfigPath},
+		&clientcmd.ConfigOverrides{
+			CurrentContext: context,
+		}).ClientConfig()
 }
 
 func (drift *Drift) WasScaledByHpa(diffOutput string) (bool, error) {

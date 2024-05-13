@@ -72,7 +72,7 @@ func (drift *Drift) Diff(renderedManifests deviation.DriftedRelease) (deviation.
 				errChan <- err
 			}
 
-			if dft.HasDrift && !wasHpaScaled {
+			if (dft.HasDrift && !wasHpaScaled) || (dft.HasDrift && wasHpaScaled && !drift.IgnoreHPAChanges) {
 				renderedManifests.HasDrift = true
 
 				diffs[index] = dft

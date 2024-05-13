@@ -36,6 +36,7 @@ type Drift struct {
 	ConsiderHooks      bool       `json:"consider_hooks,omitempty" yaml:"consider_hooks,omitempty"`
 	SkipCRDS           bool       `json:"skipCRDS,omitempty" yaml:"skipCRDS,omitempty"`
 	Validate           bool       `json:"validate,omitempty" yaml:"validate,omitempty"`
+	IgnoreHPAChanges   bool       `json:"ignore_hpa_changes,omitempty" yaml:"ignore_hpa_changes,omitempty"`
 	Kind               []string   `json:"kind,omitempty" yaml:"kind,omitempty"`
 	SkipKinds          []string   `json:"skip_kinds,omitempty" yaml:"skip_kinds,omitempty"`
 	IgnoreHookTypes    []string   `json:"ignore_hook_types,omitempty" yaml:"ignore_hook_types,omitempty"`

@@ -67,6 +67,8 @@ func registerCommonFlags(cmd *cobra.Command) {
 		"when this is enabled, the flag 'ignore-hooks' holds no value")
 	cmd.PersistentFlags().StringSliceVarP(&drifts.IgnoreHookTypes, "ignore-hooks", "", []string{"hook-succeeded", "hook-failed"},
 		"list of hooks to ignore while identifying the drifts")
+	cmd.PersistentFlags().BoolVarP(&drifts.IgnoreHPAChanges, "ignore-hpa-changes", "", false,
+		"when enabled, the drifts caused on workload due to hpa scaling would be ignored")
 }
 
 // Registers flags specific to command, run.
