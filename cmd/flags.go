@@ -32,6 +32,8 @@ func registerFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&drifts.Version, "version", "", "",
 		"specify a version constraint for the chart version to use, the value passed here would be used to set "+
 			"--version for helm template command while generating templates")
+	cmd.PersistentFlags().IntVarP(&drifts.Revision, "revision", "", 0,
+		"revision of your release from which the drifts to be detected")
 }
 
 // Registers flags to support command run/all.

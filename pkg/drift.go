@@ -20,35 +20,36 @@ const (
 
 // Drift represents GetDrift.
 type Drift struct {
-	ValueFiles         ValueFiles `json:"value_files,omitempty" yaml:"value_files,omitempty"`
-	SkipTests          bool       `json:"skip_tests,omitempty" yaml:"skip_tests,omitempty"`
-	SkipValidation     bool       `json:"skip_validation,omitempty" yaml:"skip_validation,omitempty"`
-	SkipClean          bool       `json:"skip_clean,omitempty" yaml:"skip_clean,omitempty"`
-	Summary            bool       `json:"summary,omitempty" yaml:"summary,omitempty"`
-	FromRelease        bool       `json:"from_release,omitempty" yaml:"from_release,omitempty"`
-	NoColor            bool       `json:"no_color,omitempty" yaml:"no_color,omitempty"`
-	JSON               bool       `json:"json,omitempty" yaml:"json,omitempty"`
-	YAML               bool       `json:"yaml,omitempty" yaml:"yaml,omitempty"`
-	ExitWithError      bool       `json:"exit_with_error,omitempty" yaml:"exit_with_error,omitempty"`
-	Report             bool       `json:"report,omitempty" yaml:"report,omitempty"`
-	All                bool       `json:"all,omitempty" yaml:"all,omitempty"`
+	ValueFiles         ValueFiles `json:"value_files,omitempty"          yaml:"value_files,omitempty"`
+	SkipTests          bool       `json:"skip_tests,omitempty"           yaml:"skip_tests,omitempty"`
+	SkipValidation     bool       `json:"skip_validation,omitempty"      yaml:"skip_validation,omitempty"`
+	SkipClean          bool       `json:"skip_clean,omitempty"           yaml:"skip_clean,omitempty"`
+	Summary            bool       `json:"summary,omitempty"              yaml:"summary,omitempty"`
+	FromRelease        bool       `json:"from_release,omitempty"         yaml:"from_release,omitempty"`
+	NoColor            bool       `json:"no_color,omitempty"             yaml:"no_color,omitempty"`
+	JSON               bool       `json:"json,omitempty"                 yaml:"json,omitempty"`
+	YAML               bool       `json:"yaml,omitempty"                 yaml:"yaml,omitempty"`
+	ExitWithError      bool       `json:"exit_with_error,omitempty"      yaml:"exit_with_error,omitempty"`
+	Report             bool       `json:"report,omitempty"               yaml:"report,omitempty"`
+	All                bool       `json:"all,omitempty"                  yaml:"all,omitempty"`
 	IsDefaultNamespace bool       `json:"is_default_namespace,omitempty" yaml:"is_default_namespace,omitempty"`
-	ConsiderHooks      bool       `json:"consider_hooks,omitempty" yaml:"consider_hooks,omitempty"`
-	SkipCRDS           bool       `json:"skipCRDS,omitempty" yaml:"skipCRDS,omitempty"`
-	Validate           bool       `json:"validate,omitempty" yaml:"validate,omitempty"`
-	IgnoreHPAChanges   bool       `json:"ignore_hpa_changes,omitempty" yaml:"ignore_hpa_changes,omitempty"`
-	Kind               []string   `json:"kind,omitempty" yaml:"kind,omitempty"`
-	SkipKinds          []string   `json:"skip_kinds,omitempty" yaml:"skip_kinds,omitempty"`
-	IgnoreHookTypes    []string   `json:"ignore_hook_types,omitempty" yaml:"ignore_hook_types,omitempty"`
-	Values             []string   `json:"values,omitempty" yaml:"values,omitempty"`
-	StringValues       []string   `json:"string_values,omitempty" yaml:"string_values,omitempty"`
-	FileValues         []string   `json:"file_values,omitempty" yaml:"file_values,omitempty"`
-	Version            string     `json:"version,omitempty" yaml:"version,omitempty"`
-	Regex              string     `json:"regex,omitempty" yaml:"regex,omitempty"`
-	LogLevel           string     `json:"log_level,omitempty" yaml:"log_level,omitempty"`
-	TempPath           string     `json:"temp_path,omitempty" yaml:"temp_path,omitempty"`
-	CustomDiff         string     `json:"custom_diff,omitempty" yaml:"custom_diff,omitempty"`
-	Name               string     `json:"name,omitempty" yaml:"name,omitempty"`
+	ConsiderHooks      bool       `json:"consider_hooks,omitempty"       yaml:"consider_hooks,omitempty"`
+	SkipCRDS           bool       `json:"skipCRDS,omitempty"             yaml:"skipCRDS,omitempty"`
+	Validate           bool       `json:"validate,omitempty"             yaml:"validate,omitempty"`
+	IgnoreHPAChanges   bool       `json:"ignore_hpa_changes,omitempty"   yaml:"ignore_hpa_changes,omitempty"`
+	Revision           int        `json:"revision,omitempty"             yaml:"revision,omitempty"`
+	Kind               []string   `json:"kind,omitempty"                 yaml:"kind,omitempty"`
+	SkipKinds          []string   `json:"skip_kinds,omitempty"           yaml:"skip_kinds,omitempty"`
+	IgnoreHookTypes    []string   `json:"ignore_hook_types,omitempty"    yaml:"ignore_hook_types,omitempty"`
+	Values             []string   `json:"values,omitempty"               yaml:"values,omitempty"`
+	StringValues       []string   `json:"string_values,omitempty"        yaml:"string_values,omitempty"`
+	FileValues         []string   `json:"file_values,omitempty"          yaml:"file_values,omitempty"`
+	Version            string     `json:"version,omitempty"              yaml:"version,omitempty"`
+	Regex              string     `json:"regex,omitempty"                yaml:"regex,omitempty"`
+	LogLevel           string     `json:"log_level,omitempty"            yaml:"log_level,omitempty"`
+	TempPath           string     `json:"temp_path,omitempty"            yaml:"temp_path,omitempty"`
+	CustomDiff         string     `json:"custom_diff,omitempty"          yaml:"custom_diff,omitempty"`
+	Name               string     `json:"name,omitempty"                 yaml:"name,omitempty"`
 	release            string
 	chart              string
 	namespace          string

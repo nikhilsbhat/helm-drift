@@ -36,6 +36,9 @@ func (drift *Drift) getChartFromRelease() ([]byte, error) {
 
 	client := action.NewGet(actionConfig)
 
+	drift.log.Debugf("fetching manifests from revision '%d' of helm release '%s'", drift.Revision, drift.release)
+	client.Version = drift.Revision
+
 	helmRelease, err := client.Run(drift.release)
 	if err != nil {
 		drift.log.Errorf("fetching helm release '%s' errored with '%v'", drift.release, err)

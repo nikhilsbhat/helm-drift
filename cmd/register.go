@@ -6,10 +6,14 @@ import (
 	"log"
 
 	"github.com/nikhilsbhat/helm-drift/pkg"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
-var drifts = pkg.Drift{}
+var (
+	drifts    = pkg.Drift{}
+	cliLogger *logrus.Logger
+)
 
 const (
 	getArgumentCountLocal   = 2
@@ -47,10 +51,22 @@ func (c *driftCommands) prepareCommands() *cobra.Command {
 }
 
 //nolint:goerr113
-func minimumArgError(cmd *cobra.Command, args []string) error {
+func validateAndSetArgs(cmd *cobra.Command, args []string) error {
+	logger := logrus.New()
+	logger.SetLevel(pkg.GetLoglevel(drifts.LogLevel))
+	logger.WithField("helm-drift", true)
+	logger.SetFormatter(&logrus.JSONFormatter{})
+	cliLogger = logger
+
 	minArgError := errors.New("[RELEASE] or [CHART] cannot be empty")
 	oneOfThemError := errors.New("when '--from-release' is enabled, valid input is [RELEASE] and not both [RELEASE] [CHART]")
 	cmd.SilenceUsage = true
+
+	if drifts.Revision != 0 && !drifts.FromRelease {
+		cliLogger.Fatalf("the '--revision' flag can only be used when retrieving images from a release, i.e., when the '--from-release' flag is set")
+	}
+
+	drifts.SetRelease(args[0])
 
 	if !drifts.FromRelease {
 		if len(args) != getArgumentCountLocal {
@@ -58,6 +74,8 @@ func minimumArgError(cmd *cobra.Command, args []string) error {
 
 			return fmt.Errorf("%w", minArgError)
 		}
+
+		drifts.SetChart(args[1])
 
 		return nil
 	}

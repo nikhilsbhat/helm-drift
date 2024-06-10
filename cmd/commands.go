@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 
@@ -48,7 +47,7 @@ func getRunCommand() *cobra.Command {
 		Long:  "It lists all configuration drifts that are part of the specified chart or release, if one exists.",
 		Example: `  helm drift run prometheus-standalone path/to/chart/prometheus-standalone -f ~/path/to/override-config.yaml
   helm drift run prometheus-standalone --from-release`,
-		Args: minimumArgError,
+		Args: validateAndSetArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			drifts.SetLogger(drifts.LogLevel)
 			drifts.SetWriter(os.Stdout)
@@ -57,11 +56,6 @@ func getRunCommand() *cobra.Command {
 			drifts.SetKubeConfig(envSettings.KubeConfig)
 			drifts.SetKubeContext(envSettings.KubeContext)
 			drifts.SetNamespace(envSettings.Namespace)
-
-			drifts.SetRelease(args[0])
-			if !drifts.FromRelease {
-				drifts.SetChart(args[1])
-			}
 
 			if !drifts.SkipValidation {
 				if !drifts.ValidatePrerequisite() {
@@ -124,21 +118,20 @@ Do note that this is expensive operation since multiple kubectl command would be
 func versionConfig(_ *cobra.Command, _ []string) error {
 	buildInfo, err := json.Marshal(version.GetBuildInfo())
 	if err != nil {
-		log.Fatalf("fetching version of helm-version failed with: %v", err)
+		cliLogger.Fatalf("fetching version of helm-version failed with: %v", err)
 	}
 
 	writer := bufio.NewWriter(os.Stdout)
 	versionInfo := fmt.Sprintf("%s \n", strings.Join([]string{"drift version", string(buildInfo)}, ": "))
-	_, err = writer.WriteString(versionInfo)
 
-	if err != nil {
-		log.Fatalln(err)
+	if _, err = writer.WriteString(versionInfo); err != nil {
+		cliLogger.Fatalln(err)
 	}
 
 	defer func(writer *bufio.Writer) {
 		err = writer.Flush()
 		if err != nil {
-			log.Fatalln(err)
+			cliLogger.Fatalln(err)
 		}
 	}(writer)
 
