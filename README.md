@@ -41,59 +41,37 @@ helm drift run prometheus-standalone example/chart/sample/ -f ~/path/to/example/
                  ------------------------|---------
 Namespace: 'sample' Release: 'sample'
 
-# Invoking command with out flag --summary would render detailed drifts.
+# Invoking command without flag --summary would render detailed drifts.
 helm drift run prometheus-standalone example/chart/sample/ -f ~/path/to/example/chart/sample/override-config.yaml --skip-cleaning
 # executing above command would yield results something like below:
+--------------------------------------------------------------------------------------------------
+Release                                : sample
 ------------------------------------------------------------------------------------
 Identified drifts in: 'StatefulSet' 'web'
 
 -----------
-diff -u -N /var/folders/dm/40_kbx_56psgqt29q0wh2cxh0000gq/T/LIVE-2873647491/apps.v1.StatefulSet.sample.web /var/folders/dm/40_kbx_56psgqt29q0wh2cxh0000gq/T/MERGED-4261927724/apps.v1.StatefulSet.sample.web
---- /var/folders/dm/40_kbx_56psgqt29q0wh2cxh0000gq/T/LIVE-2873647491/apps.v1.StatefulSet.sample.web	2023-03-25 23:33:06.000000000 +0530
-+++ /var/folders/dm/40_kbx_56psgqt29q0wh2cxh0000gq/T/MERGED-4261927724/apps.v1.StatefulSet.sample.web	2023-03-25 23:33:06.000000000 +0530
+diff -u -N /var/folders/dm/40_kbx_56psgqt29q0wh2cxh0000gq/T/LIVE-1098999488/apps.v1.StatefulSet.sample.web /var/folders/dm/40_kbx_56psgqt29q0wh2cxh0000gq/T/MERGED-836230905/apps.v1.StatefulSet.sample.web
+--- /var/folders/dm/40_kbx_56psgqt29q0wh2cxh0000gq/T/LIVE-1098999488/apps.v1.StatefulSet.sample.web	2024-07-07 18:39:33
++++ /var/folders/dm/40_kbx_56psgqt29q0wh2cxh0000gq/T/MERGED-836230905/apps.v1.StatefulSet.sample.web	2024-07-07 18:39:33
 @@ -5,7 +5,7 @@
      meta.helm.sh/release-name: sample
      meta.helm.sh/release-namespace: sample
-   creationTimestamp: "2023-03-24T06:15:02Z"
--  generation: 2
-+  generation: 3
+   creationTimestamp: "2024-07-07T11:32:21Z"
+-  generation: 3
++  generation: 4
    labels:
      app.kubernetes.io/managed-by: Helm
-   managedFields:
-@@ -84,7 +84,6 @@
-           f:spec:
-             f:containers:
-               k:{"name":"nginx"}:
--                f:image: {}
-                 f:ports:
-                   k:{"containerPort":8080,"protocol":"TCP"}:
-                     .: {}
-@@ -94,6 +93,24 @@
-     manager: kubectl-edit
-     operation: Update
-     time: "2023-03-24T06:19:50Z"
-+  - apiVersion: apps/v1
-+    fieldsType: FieldsV1
-+    fieldsV1:
-+      f:spec:
-+        f:template:
-+          f:spec:
-+            f:containers:
-+              k:{"name":"nginx"}:
-+                f:image: {}
-+                f:ports:
-+                  k:{"containerPort":80,"protocol":"TCP"}:
-+                    .: {}
-+                    f:containerPort: {}
-+                    f:name: {}
-+                    f:protocol: {}
-+    manager: kubectl-client-side-apply
-+    operation: Update
-+    time: "2023-03-25T18:03:05Z"
    name: web
-   namespace: sample
-   resourceVersion: "14246"
-@@ -114,10 +131,13 @@
+@@ -15,7 +15,7 @@
+ spec:
+   minReadySeconds: 10
+   podManagementPolicy: OrderedReady
+-  replicas: 2
++  replicas: 3
+   revisionHistoryLimit: 10
+   selector:
+     matchLabels:
+@@ -28,7 +28,7 @@
          app: nginx
      spec:
        containers:
@@ -102,13 +80,15 @@ diff -u -N /var/folders/dm/40_kbx_56psgqt29q0wh2cxh0000gq/T/LIVE-2873647491/apps
          imagePullPolicy: IfNotPresent
          name: nginx
          ports:
-+        - containerPort: 80
-+          name: web
-+          protocol: TCP
-         - containerPort: 8080
-           name: web
-           protocol: TCP
 -----------
+
+------------------------------------------------------------------------------------
+OOPS...! DRIFTS FOUND
+------------------------------------------------------------------------------------
+Total time spent on identifying drifts : 0.383524375
+Total number of drifts found           : YES
+Status                                 : FAILED
+------------------------------------------------------------------------------------
 ```
 
 ## Suggestion
