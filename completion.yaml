@@ -1,7 +1,9 @@
 name: drift
 flags:
+  - concurrency
   - log-level
   - no-color
+  - revision
   - set
   - set-file
   - set-string

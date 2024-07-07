@@ -34,6 +34,8 @@ func registerFlags(cmd *cobra.Command) {
 			"--version for helm template command while generating templates")
 	cmd.PersistentFlags().IntVarP(&drifts.Revision, "revision", "", 0,
 		"revision of your release from which the drifts to be detected")
+	cmd.PersistentFlags().IntVarP(&drifts.Concurrency, "concurrency", "", 1,
+		"the value to be set for flag --concurrency of 'kubectl diff'")
 }
 
 // Registers flags to support command run/all.

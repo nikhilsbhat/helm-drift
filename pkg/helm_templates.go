@@ -22,7 +22,7 @@ func (templates *HelmTemplates) FilterBySkip(drift *Drift) []string {
 			return true
 		}
 
-		kind, err := k8s.NewResource().GetKind(tmpl, nil)
+		kind, err := k8s.NewResource().Get(tmpl, "", nil)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -37,7 +37,7 @@ func (templates *HelmTemplates) FilterByKind(drift *Drift) []string {
 			return true
 		}
 
-		kind, err := k8s.NewResource().GetKind(tmpl, drift.log)
+		kind, err := k8s.NewResource().Get(tmpl, "", drift.log)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -52,7 +52,7 @@ func (templates *HelmTemplates) FilterByName(drift *Drift) []string {
 			return true
 		}
 
-		name, err := k8s.NewResource().GetName(tmpl, drift.log)
+		name, err := k8s.NewResource().GetMetadata(tmpl, "name", drift.log)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -80,12 +80,12 @@ func (templates *HelmTemplates) Get(log *logrus.Logger) ([]deviation.Deviation, 
 	deviations := make([]deviation.Deviation, 0)
 
 	for _, manifest := range *templates {
-		name, err := k8s.NewResource().GetName(manifest, log)
+		name, err := k8s.NewResource().GetMetadata(manifest, "name", log)
 		if err != nil {
 			return nil, err
 		}
 
-		kind, err := k8s.NewResource().GetKind(manifest, log)
+		kind, err := k8s.NewResource().Get(manifest, "", log)
 		if err != nil {
 			return nil, err
 		}
@@ -97,19 +97,24 @@ func (templates *HelmTemplates) Get(log *logrus.Logger) ([]deviation.Deviation, 
 }
 
 func (template *HelmTemplate) Get(log *logrus.Logger) (deviation.Deviation, error) {
-	name, err := k8s.NewResource().GetName(string(*template), log)
+	name, err := k8s.NewResource().GetMetadata(string(*template), "name", log)
 	if err != nil {
 		return deviation.Deviation{}, err
 	}
 
-	kind, err := k8s.NewResource().GetKind(string(*template), log)
+	kind, err := k8s.NewResource().Get(string(*template), "kind", log)
 	if err != nil {
 		return deviation.Deviation{}, err
 	}
 
-	dvn := deviation.Deviation{Resource: name, Kind: kind}
+	apiVersion, err := k8s.NewResource().Get(string(*template), "apiVersion", log)
+	if err != nil {
+		return deviation.Deviation{}, err
+	}
 
-	nameSpace, err := k8s.NewResource().GetNameSpace(name, kind, string(*template), log)
+	dvn := deviation.Deviation{Resource: name, Kind: kind, APIVersion: apiVersion}
+
+	nameSpace, err := k8s.NewResource().GetMetadata(string(*template), "namespace", log)
 
 	notFoundErrType := &driftError.NotFoundError{}
 

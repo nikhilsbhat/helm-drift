@@ -34,8 +34,12 @@ local.check: local.fmt ## Loads all the dependencies to vendor directory
 	go mod vendor
 	go mod tidy
 
-build.local: local.check ## Generates the artifact with the help of 'go build'
+local.build: local.check ## Generates the artifact with the help of 'go build'
 	@go build -o $(APP_NAME)_v$(VERSION) -ldflags="-s -w"
+
+local.deploy: local.build ## Generates the artifact with the help of 'go build'
+	@rm -rf ${HOME}/Library/helm/plugins/helm-drift/bin/helm-drift
+	@cp $(APP_NAME)_v$(VERSION) ${HOME}/Library/helm/plugins/helm-drift/bin/helm-drift
 
 local.push: local.build ## Pushes built artifact to the specified location
 

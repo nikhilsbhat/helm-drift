@@ -15,14 +15,29 @@ type (
 
 // ResourceInterface implements methods to get resource name and kind.
 type ResourceInterface interface {
-	GetName(dataMap string, log *logrus.Logger) (string, error)
-	GetKind(dataMap string, log *logrus.Logger) (string, error)
-	GetNameSpace(name, kind, dataMap string, log *logrus.Logger) (string, error)
+	Get(dataMap string, key string, log *logrus.Logger) (string, error)
+	GetMetadata(dataMap string, key string, log *logrus.Logger) (string, error)
 	IsHelmHook(dataMap string, hookKinds []string) (bool, error)
 }
 
-// GetName gets the name form the kubernetes resource.
-func (resource *Resource) GetName(dataMap string, log *logrus.Logger) (string, error) {
+// Get helps in identifying kind form the kubernetes resource.
+func (resource *Resource) Get(dataMap string, key string, _ *logrus.Logger) (string, error) {
+	if err := yaml.Unmarshal([]byte(dataMap), resource); err != nil {
+		return "", err
+	}
+
+	kindYaml := *resource
+
+	value, failedManifest := kindYaml[key].(string)
+	if !failedManifest {
+		return "", &errors.DriftError{Message: fmt.Sprintf("failed to get %s from the manifest, '%s' is not type string", key, key)}
+	}
+
+	return value, nil
+}
+
+// GetMetadata gets the namespace form the kubernetes resource.
+func (resource *Resource) GetMetadata(dataMap string, key string, log *logrus.Logger) (string, error) {
 	if err := yaml.Unmarshal([]byte(dataMap), resource); err != nil {
 		return "", err
 	}
@@ -36,48 +51,9 @@ func (resource *Resource) GetName(dataMap string, log *logrus.Logger) (string, e
 		return "", nil
 	}
 
-	value, failedManifest := metadata["name"].(string)
+	value, failedManifest := metadata[key].(string)
 	if !failedManifest {
-		return "", &errors.DriftError{Message: "failed to get name from the manifest, 'name' is not type string"}
-	}
-
-	return value, nil
-}
-
-// GetKind helps in identifying kind form the kubernetes resource.
-func (resource *Resource) GetKind(dataMap string, _ *logrus.Logger) (string, error) {
-	if err := yaml.Unmarshal([]byte(dataMap), resource); err != nil {
-		return "", err
-	}
-
-	kindYaml := *resource
-
-	value, failedManifest := kindYaml["kind"].(string)
-	if !failedManifest {
-		return "", &errors.DriftError{Message: "failed to get kube kind from the manifest, 'kind' is not type string"}
-	}
-
-	return value, nil
-}
-
-// GetNameSpace gets the namespace form the kubernetes resource.
-func (resource *Resource) GetNameSpace(name, kind, dataMap string, log *logrus.Logger) (string, error) {
-	if err := yaml.Unmarshal([]byte(dataMap), resource); err != nil {
-		return "", err
-	}
-
-	kindYaml := *resource
-
-	metadata, metadataExists := kindYaml["metadata"].(map[string]interface{})
-	if !metadataExists {
-		log.Debug("failed to get 'metadata' from the manifest")
-
-		return "", nil
-	}
-
-	value, failedManifest := metadata["namespace"].(string)
-	if !failedManifest {
-		return "", &errors.NotFoundError{Key: "namespace", Manifest: fmt.Sprintf("%s/%s", name, kind)}
+		return "", &errors.DriftError{Message: fmt.Sprintf("failed to get %s from the manifest, '%s' is not type string", key, key)}
 	}
 
 	return value, nil

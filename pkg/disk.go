@@ -65,6 +65,7 @@ func (drift *Drift) renderToDisk(manifests []string, chartName, releaseName, rel
 		drift.log.Debugf("manifest for '%s' generated successfully", template.Resource)
 
 		dvn := deviation.Deviation{
+			APIVersion:   template.APIVersion,
 			Kind:         template.Kind,
 			Resource:     template.Resource,
 			NameSpace:    template.NameSpace,

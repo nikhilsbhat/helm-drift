@@ -32,7 +32,11 @@ func (drift *Drift) Diff(renderedManifests deviation.DriftedRelease) (deviation.
 
 			drift.log.Debugf("calculating diff for %s", manifestPath)
 
-			arguments := []string{fmt.Sprintf("-f=%s", manifestPath)}
+			arguments := []string{
+				"--show-managed-fields=false",
+				fmt.Sprintf("--concurrency=%d", drift.Concurrency),
+				fmt.Sprintf("-f=%s", manifestPath),
+			}
 
 			nameSpace := drift.setNameSpace(renderedManifests, dvn)
 			drift.log.Debugf("setting namespace to %s", nameSpace)
@@ -46,9 +50,9 @@ func (drift *Drift) Diff(renderedManifests deviation.DriftedRelease) (deviation.
 
 			cmd := command.NewCommand("kubectl", drift.log)
 
-			cmd.SetKubeCmd(drift.kubeConfig, drift.kubeContext, nameSpace, arguments...)
+			cmd.SetKubeDiffCmd(drift.kubeConfig, drift.kubeContext, nameSpace, arguments...)
 
-			dft, err := cmd.RunKubeCmd(dvn)
+			dft, err := cmd.RunKubeDiffCmd(dvn)
 			if err != nil {
 				drift.log.Error(err)
 
