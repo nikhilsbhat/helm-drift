@@ -20,33 +20,31 @@ commands:
       - disable-error-on-drift
       - from-release
       - ignore-hooks
-      - json
+      - ignore-hpa-changes
       - kind
       - name
+      - output
       - regex
-      - report
       - skip
       - skip-cleaning
       - skip-validation
-      - summary
       - temp-path
-      - yaml
   - name: all
     flags:
       - consider-hooks
       - custom-diff
       - disable-error-on-drift
       - ignore-hooks
+      - ignore-hpa-changes
       - is-default-namespace
-      - json
       - kind
       - name
+      - output
       - regex
-      - report
       - skip
       - skip-cleaning
+      - skip-release
       - skip-validation
       - summary
       - temp-path
-      - yaml
   - name: version

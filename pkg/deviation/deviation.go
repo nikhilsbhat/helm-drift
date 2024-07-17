@@ -74,16 +74,10 @@ func (dvn *DriftedReleases) Count() int {
 }
 
 // Drifted returns Yes if at least one of the release has Drifted.
-func (dvn *DriftedReleases) Drifted() string {
-	hasDrift := funk.Contains(&dvn, func(dft DriftedRelease) bool {
+func (dvn *DriftedReleases) Drifted() bool {
+	return funk.Contains(*dvn, func(dft *DriftedRelease) bool {
 		return dft.HasDrift
 	})
-
-	if hasDrift {
-		return Yes
-	}
-
-	return No
 }
 
 // Drifted returns Yes if at least one of the manifest from a release has Drifted.

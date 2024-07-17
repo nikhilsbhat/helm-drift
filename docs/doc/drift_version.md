@@ -21,7 +21,7 @@ drift version [flags]
 ```
       --concurrency int          the value to be set for flag --concurrency of 'kubectl diff' (default 1)
   -l, --log-level string         log level for the plugin helm drift (defaults to info) (default "info")
-      --no-color                 enabling this would render summary with no color
+      --no-color                 enabling this would render output with no color
       --revision int             revision of your release from which the drifts to be detected
       --set stringArray          set values on the command line (can specify multiple or separate values with commas: key1=val1,key2=val2)
       --set-file stringArray     set values from respective files specified via the command line (can specify multiple or separate values with commas: key1=path1,key2=path2)

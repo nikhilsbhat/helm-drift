@@ -13,6 +13,8 @@ import (
 func (drift *Drift) render(drifts []*deviation.DriftedRelease) error {
 	drift.write(addNewLine(""))
 
+	release := deviation.DriftedReleases(drifts)
+
 	if drift.json || drift.yaml {
 		return drift.renderer.Render(drifts)
 	}
@@ -25,14 +27,16 @@ func (drift *Drift) render(drifts []*deviation.DriftedRelease) error {
 
 	drift.print(drifts)
 
+	if release.Drifted() && drift.DisableExitWithError {
+		os.Exit(1)
+	}
+
 	return nil
 }
 
 func (drift *Drift) toTABLE(drifts []*deviation.DriftedRelease) {
 	drift.log.Debug("rendering the drifts in table format since --summary is enabled")
 	table := drift.tableSchema()
-
-	var hasDrift bool
 
 	switch drift.All {
 	case true:
@@ -45,10 +49,6 @@ func (drift *Drift) toTABLE(drifts []*deviation.DriftedRelease) {
 
 	table.Render()
 	drift.write(addNewLine(fmt.Sprintf("Time spent in identifying drift: '%v'\n", drift.timeSpent)))
-
-	if hasDrift && !drift.ExitWithError {
-		os.Exit(1)
-	}
 }
 
 func (drift *Drift) runTable(table *tablewriter.Table, deviations []*deviation.DriftedRelease) bool {
@@ -136,11 +136,9 @@ func (drift *Drift) print(drifts []*deviation.DriftedRelease) {
 		os.Exit(0)
 	}
 
-	drfts := drifts[0] //nolint:gosec
-	deviations := deviation.Deviations(drfts.Deviations)
-	dvn := deviation.DriftedReleases(drifts)
-
-	var hasDrift bool
+	drft := drifts[0] //nolint:gosec
+	deviations := deviation.Deviations(drft.Deviations)
+	release := deviation.DriftedReleases(drifts)
 
 	for _, dft := range drifts {
 		if !dft.HasDrift {
@@ -156,8 +154,6 @@ func (drift *Drift) print(drifts []*deviation.DriftedRelease) {
 
 		for _, dvn := range dft.Deviations {
 			if dvn.HasDrift {
-				hasDrift = true
-
 				drift.write(addNewLine("------------------------------------------------------------------------------------"))
 				drift.write(addNewLine(fmt.Sprintf("Identified drifts in: '%s' '%s'", dvn.Kind, dvn.Resource)))
 				drift.write(addNewLine("-----------"))
@@ -170,7 +166,7 @@ func (drift *Drift) print(drifts []*deviation.DriftedRelease) {
 		drift.write(addNewLine("------------------------------------------------------------------------------------"))
 	}
 
-	switch !hasDrift {
+	switch !release.Drifted() {
 	case true:
 		drift.write(addNewLine("YAY...! NO DRIFTS FOUND"))
 	default:
@@ -184,8 +180,8 @@ func (drift *Drift) print(drifts []*deviation.DriftedRelease) {
 		drift.write(addNewLine(fmt.Sprintf("Total number of drifts found           : %v", deviations.Count())))
 		drift.write(addNewLine(fmt.Sprintf("Status                                 : %s", deviations.Status())))
 	} else {
-		drift.write(addNewLine(fmt.Sprintf("Total number of drifts found           : %v", dvn.Count())))
-		drift.write(addNewLine(fmt.Sprintf("Status                                 : %s", dvn.Status())))
+		drift.write(addNewLine(fmt.Sprintf("Total number of drifts found           : %v", release.Count())))
+		drift.write(addNewLine(fmt.Sprintf("Status                                 : %s", release.Status())))
 	}
 
 	drift.write(addNewLine("------------------------------------------------------------------------------------"))

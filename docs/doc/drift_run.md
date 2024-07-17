@@ -13,7 +13,7 @@ drift run [RELEASE] [CHART] [flags]
 ### Examples
 
 ```
-  helm drift run prometheus-standalone path/to/chart/prometheus-standalone -f ~/path/to/override-config.yaml
+helm drift run prometheus-standalone path/to/chart/prometheus-standalone -f ~/path/to/override-config.yaml
   helm drift run prometheus-standalone --from-release
 ```
 
@@ -22,7 +22,7 @@ drift run [RELEASE] [CHART] [flags]
 ```
       --consider-hooks                      when this is enabled, the flag 'ignore-hooks' holds no value
       --custom-diff KUBECTL_EXTERNAL_DIFF   custom diff command to use instead of default, the command passed here would be set under KUBECTL_EXTERNAL_DIFF.More information can be found here https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#diff
-  -d, --disable-error-on-drift              enabling this would disable exiting with error if drifts were identified (works only when --summary is enabled)
+  -d, --disable-error-on-drift              enabling this would disable exiting with error if drifts were identified
       --from-release                        enable the flag to identify drifts from a release instead (disabled by default, works with command 'run' not with 'all')
   -h, --help                                help for run
       --ignore-hooks strings                list of hooks to ignore while identifying the drifts (default [hook-succeeded,hook-failed])
@@ -31,7 +31,6 @@ drift run [RELEASE] [CHART] [flags]
       --name string                         name of the kubernetes resource to limit the drift identification
   -o, --output string                       the format to which the output should be rendered to, it should be one of yaml|json|table, if nothing specified it sets to default
       --regex string                        regex used to split helm template rendered (default "---\\n# Source:\\s.*.")
-      --report                              when enabled the summary report would be rendered on to a file (this works only if --yaml or --json is enabled along with summary)
       --skip strings                        kubernetes resource names to skip the drift identification (ex: --skip Deployments)
       --skip-cleaning                       enable the flag to skip cleaning the manifests rendered on to disk
       --skip-validation                     enable the flag if prerequisite validation needs to be skipped
@@ -43,7 +42,7 @@ drift run [RELEASE] [CHART] [flags]
 ```
       --concurrency int          the value to be set for flag --concurrency of 'kubectl diff' (default 1)
   -l, --log-level string         log level for the plugin helm drift (defaults to info) (default "info")
-      --no-color                 enabling this would render summary with no color
+      --no-color                 enabling this would render output with no color
       --revision int             revision of your release from which the drifts to be detected
       --set stringArray          set values on the command line (can specify multiple or separate values with commas: key1=val1,key2=val2)
       --set-file stringArray     set values from respective files specified via the command line (can specify multiple or separate values with commas: key1=path1,key2=path2)

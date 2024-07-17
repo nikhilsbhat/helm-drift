@@ -45,8 +45,8 @@ func getRunCommand() *cobra.Command {
 		Use:   "run [RELEASE] [CHART] [flags]",
 		Short: "Identifies drifts from a selected chart or release.",
 		Long:  "It lists all configuration drifts that are part of the specified chart or release, if one exists.",
-		Example: `  helm drift run prometheus-standalone path/to/chart/prometheus-standalone -f ~/path/to/override-config.yaml
-  helm drift run prometheus-standalone --from-release`,
+		Example: `helm drift run prometheus-standalone path/to/chart/prometheus-standalone -f ~/path/to/override-config.yaml
+helm drift run prometheus-standalone --from-release`,
 		Args: validateAndSetArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			drifts.SetLogger(drifts.LogLevel)
@@ -84,8 +84,8 @@ func getAllCommand() *cobra.Command {
 		Short: "Identifies drifts from all releases from the cluster.",
 		Long: `It lists all configuration drifts that are part of various releases present in the cluster. 
 Do note that this is expensive operation since multiple kubectl command would be executed in parallel.`,
-		Example: `  helm drift all --kube-context k3d-sample
-  helm drift all --kube-context k3d-sample -n sample`,
+		Example: `helm drift all --kube-context k3d-sample
+helm drift all --kube-context k3d-sample -n sample`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.SilenceUsage = true

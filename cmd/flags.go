@@ -24,7 +24,7 @@ func registerFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&drifts.LogLevel, "log-level", "l", "info",
 		"log level for the plugin helm drift (defaults to info)")
 	cmd.PersistentFlags().BoolVarP(&drifts.NoColor, "no-color", "", false,
-		"enabling this would render summary with no color")
+		"enabling this would render output with no color")
 	cmd.PersistentFlags().BoolVarP(&drifts.SkipCRDS, "skip-crds", "", false,
 		"setting this would set '--skip-crds' for helm template command while generating templates")
 	cmd.PersistentFlags().BoolVarP(&drifts.Validate, "validate", "", false,
@@ -50,10 +50,8 @@ func registerCommonFlags(cmd *cobra.Command) {
 		"enable the flag to skip cleaning the manifests rendered on to disk")
 	cmd.PersistentFlags().StringVarP(&drifts.OutputFormat, "output", "o", "",
 		"the format to which the output should be rendered to, it should be one of yaml|json|table, if nothing specified it sets to default")
-	cmd.PersistentFlags().BoolVarP(&drifts.ExitWithError, "disable-error-on-drift", "d", false,
-		"enabling this would disable exiting with error if drifts were identified (works only when --summary is enabled)")
-	cmd.PersistentFlags().BoolVarP(&drifts.Report, "report", "", false,
-		"when enabled the summary report would be rendered on to a file (this works only if --yaml or --json is enabled along with summary)")
+	cmd.PersistentFlags().BoolVarP(&drifts.DisableExitWithError, "disable-error-on-drift", "d", false,
+		"enabling this would disable exiting with error if drifts were identified")
 	cmd.PersistentFlags().StringVarP(&drifts.CustomDiff, "custom-diff", "", "",
 		"custom diff command to use instead of default, the command passed here would be set under `KUBECTL_EXTERNAL_DIFF`."+
 			"More information can be found here https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#diff")
