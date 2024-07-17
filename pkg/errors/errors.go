@@ -19,8 +19,8 @@ type DriftError struct {
 }
 
 type NotAllError struct {
-	ResourceFromDeviations []deviation.Deviation
-	Manifests              []deviation.Deviation
+	ResourceFromDeviations []*deviation.Deviation
+	Manifests              []*deviation.Deviation
 }
 
 type DiskError struct {
@@ -63,14 +63,15 @@ func (e *DiskError) HasDiskError() (string, bool) {
 }
 
 func (e *NotAllError) Error() string {
-	var diffs []deviation.Deviation
+	var diffs []*deviation.Deviation
 
 	for _, resource := range e.Manifests {
 		rs := resource
+
 		if !funk.Contains(e.ResourceFromDeviations, func(dvn deviation.Deviation) bool {
 			return (dvn.Resource == rs.Resource) && (dvn.Kind == rs.Kind)
 		}) {
-			diffs = append(diffs, rs)
+			diffs = append(diffs, resource)
 		}
 	}
 

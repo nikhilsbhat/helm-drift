@@ -41,7 +41,7 @@ func getVersionCommand() *cobra.Command {
 }
 
 func getRunCommand() *cobra.Command {
-	driftCommand := &cobra.Command{
+	driftRunCommand := &cobra.Command{
 		Use:   "run [RELEASE] [CHART] [flags]",
 		Short: "Identifies drifts from a selected chart or release.",
 		Long:  "It lists all configuration drifts that are part of the specified chart or release, if one exists.",
@@ -51,6 +51,8 @@ func getRunCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			drifts.SetLogger(drifts.LogLevel)
 			drifts.SetWriter(os.Stdout)
+			drifts.SetOutputFormats()
+			drifts.SetRenderer()
 			cmd.SilenceUsage = true
 
 			drifts.SetKubeConfig(envSettings.KubeConfig)
@@ -69,15 +71,15 @@ func getRunCommand() *cobra.Command {
 		},
 	}
 
-	driftCommand.SilenceErrors = true
-	registerCommonFlags(driftCommand)
-	registerDriftFlags(driftCommand)
+	driftRunCommand.SilenceErrors = true
+	registerCommonFlags(driftRunCommand)
+	registerDriftFlags(driftRunCommand)
 
-	return driftCommand
+	return driftRunCommand
 }
 
 func getAllCommand() *cobra.Command {
-	driftCommand := &cobra.Command{
+	driftAllCommand := &cobra.Command{
 		Use:   "all",
 		Short: "Identifies drifts from all releases from the cluster.",
 		Long: `It lists all configuration drifts that are part of various releases present in the cluster. 
@@ -86,9 +88,16 @@ Do note that this is expensive operation since multiple kubectl command would be
   helm drift all --kube-context k3d-sample -n sample`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.SilenceUsage = true
+
 			drifts.SetLogger(drifts.LogLevel)
 			drifts.SetWriter(os.Stdout)
-			cmd.SilenceUsage = true
+			drifts.SetOutputFormats()
+			drifts.SetRenderer()
+
+			if err := drifts.SetReleasesToSkips(); err != nil {
+				return err
+			}
 
 			drifts.SetKubeConfig(envSettings.KubeConfig)
 			drifts.SetKubeContext(envSettings.KubeContext)
@@ -108,11 +117,13 @@ Do note that this is expensive operation since multiple kubectl command would be
 		},
 	}
 
-	driftCommand.SilenceErrors = true
-	registerCommonFlags(driftCommand)
-	registerDriftAllFlags(driftCommand)
+	driftAllCommand.SilenceErrors = true
+	registerCommonFlags(driftAllCommand)
+	registerDriftAllFlags(driftAllCommand)
+	driftAllCommand.PersistentFlags().StringArrayVar(&drifts.SkipReleases, "skip-release", nil,
+		"list of helm releases to be skipped for identifying helm drifts, ex: ReleaseName=Namespace | ReleaseName=Namespace")
 
-	return driftCommand
+	return driftAllCommand
 }
 
 func versionConfig(_ *cobra.Command, _ []string) error {

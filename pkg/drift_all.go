@@ -29,13 +29,15 @@ func (drift *Drift) GetAllDrift() {
 		drift.log.Fatalf("%v", err)
 	}
 
+	releases = resourcesToSkip(drift.releasesToSkip).filterRelease(releases)
+
 	defer func(drift *Drift) {
 		if err = drift.cleanManifests(false); err != nil {
 			drift.log.Fatalf("cleaning rendered files failed with: %v", err)
 		}
 	}(drift)
 
-	driftedReleases := make([]deviation.DriftedRelease, 0)
+	driftedReleases := make([]*deviation.DriftedRelease, 0)
 
 	var waitGroup sync.WaitGroup
 
@@ -65,7 +67,7 @@ func (drift *Drift) GetAllDrift() {
 				errChan <- err
 			}
 
-			if len(out.Deviations) == 0 {
+			if len(out.Deviations) == 0 && err == nil {
 				drift.log.Infof("no drifts identified for relase '%s'", release.Name)
 
 				return

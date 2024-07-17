@@ -122,7 +122,7 @@ func (drift *Drift) dropStandardHelmLabels(resource *unstructured.Unstructured) 
 	return resource
 }
 
-func findGVR(clientSet *kubernetes.Clientset, group, version, resourceType string) (schema.GroupVersionResource, error) {
+func findGVR(clientSet *kubernetes.Clientset, _, version, resourceType string) (schema.GroupVersionResource, error) {
 	resources, err := clientSet.Discovery().ServerPreferredResources()
 	if err != nil {
 		return schema.GroupVersionResource{}, err

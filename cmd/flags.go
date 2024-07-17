@@ -48,12 +48,8 @@ func registerCommonFlags(cmd *cobra.Command) {
 		"enable the flag if prerequisite validation needs to be skipped")
 	cmd.PersistentFlags().BoolVarP(&drifts.SkipClean, "skip-cleaning", "", false,
 		"enable the flag to skip cleaning the manifests rendered on to disk")
-	cmd.PersistentFlags().BoolVarP(&drifts.Summary, "summary", "", false,
-		"if enabled, prints a quick summary in table format without printing actual drifts")
-	cmd.PersistentFlags().BoolVarP(&drifts.JSON, "json", "j", false,
-		"enable the flag to render drifts in json format (disabled by default)")
-	cmd.PersistentFlags().BoolVarP(&drifts.YAML, "yaml", "y", false,
-		"enable the flag to render drifts in yaml format (disabled by default)")
+	cmd.PersistentFlags().StringVarP(&drifts.OutputFormat, "output", "o", "",
+		"the format to which the output should be rendered to, it should be one of yaml|json|table, if nothing specified it sets to default")
 	cmd.PersistentFlags().BoolVarP(&drifts.ExitWithError, "disable-error-on-drift", "d", false,
 		"enabling this would disable exiting with error if drifts were identified (works only when --summary is enabled)")
 	cmd.PersistentFlags().BoolVarP(&drifts.Report, "report", "", false,

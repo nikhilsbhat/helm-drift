@@ -10,11 +10,11 @@ import (
 	"github.com/nikhilsbhat/helm-drift/pkg/errors"
 )
 
-func (drift *Drift) Diff(renderedManifests deviation.DriftedRelease) (deviation.DriftedRelease, error) {
+func (drift *Drift) Diff(renderedManifests *deviation.DriftedRelease) (*deviation.DriftedRelease, error) {
 	var (
 		waitGroup sync.WaitGroup
 		errChan   = make(chan error, len(renderedManifests.Deviations))
-		diffs     = make([]deviation.Deviation, len(renderedManifests.Deviations))
+		diffs     = make([]*deviation.Deviation, len(renderedManifests.Deviations))
 	)
 
 	waitGroup.Add(len(renderedManifests.Deviations))
@@ -24,8 +24,15 @@ func (drift *Drift) Diff(renderedManifests deviation.DriftedRelease) (deviation.
 		close(errChan)
 	}()
 
+	handleError := func(err error) {
+		if err != nil {
+			drift.log.Error(err)
+			errChan <- err
+		}
+	}
+
 	for index, dvn := range renderedManifests.Deviations {
-		go func(index int, dvn deviation.Deviation) {
+		go func(index int, dvn *deviation.Deviation) {
 			defer waitGroup.Done()
 
 			manifestPath := dvn.ManifestPath
@@ -42,22 +49,14 @@ func (drift *Drift) Diff(renderedManifests deviation.DriftedRelease) (deviation.
 			drift.log.Debugf("setting namespace to %s", nameSpace)
 
 			isManagedByHPA, err := drift.IsManagedByHPA(dvn.Resource, dvn.Kind, nameSpace)
-			if err != nil {
-				drift.log.Error(err)
-
-				errChan <- err
-			}
+			handleError(err)
 
 			cmd := command.NewCommand("kubectl", drift.log)
 
 			cmd.SetKubeDiffCmd(drift.kubeConfig, drift.kubeContext, nameSpace, arguments...)
 
 			dft, err := cmd.RunKubeDiffCmd(dvn)
-			if err != nil {
-				drift.log.Error(err)
-
-				errChan <- err
-			}
+			handleError(err)
 
 			if !isManagedByHPA {
 				if dft.HasDrift {
@@ -70,17 +69,16 @@ func (drift *Drift) Diff(renderedManifests deviation.DriftedRelease) (deviation.
 			}
 
 			wasHpaScaled, err := drift.WasScaledByHpa(dft.Deviations)
-			if err != nil {
-				drift.log.Error(err)
+			handleError(err)
 
-				errChan <- err
-			}
-
-			if (dft.HasDrift && !wasHpaScaled) || (dft.HasDrift && wasHpaScaled && !drift.IgnoreHPAChanges) {
+			if dft.HasDrift && (!wasHpaScaled || !drift.IgnoreHPAChanges) {
 				renderedManifests.HasDrift = true
-
-				diffs[index] = dft
+			} else {
+				dft.HasDrift = false
+				dft.Deviations = ""
 			}
+
+			diffs[index] = dft
 		}(index, dvn)
 	}
 
@@ -93,7 +91,7 @@ func (drift *Drift) Diff(renderedManifests deviation.DriftedRelease) (deviation.
 	}
 
 	if len(diffErrors) != 0 {
-		return deviation.DriftedRelease{}, &errors.DriftError{Message: fmt.Sprintf("calculating diff errored with: %s", strings.Join(diffErrors, "\n"))}
+		return nil, &errors.DriftError{Message: fmt.Sprintf("calculating diff errored with: %s", strings.Join(diffErrors, "\n"))}
 	}
 
 	renderedManifests.Deviations = diffs
@@ -103,7 +101,7 @@ func (drift *Drift) Diff(renderedManifests deviation.DriftedRelease) (deviation.
 	return renderedManifests, nil
 }
 
-func (drift *Drift) setNameSpace(releaseNameSpace deviation.DriftedRelease, manifestNameSpace deviation.Deviation) string {
+func (drift *Drift) setNameSpace(releaseNameSpace *deviation.DriftedRelease, manifestNameSpace *deviation.Deviation) string {
 	if len(manifestNameSpace.NameSpace) != 0 {
 		drift.log.Debugf("manifest is not deployed in a helm release's namespace, it is set to '%s'. "+
 			"So considering this namespace for identifying drifts in manifest '%s'", manifestNameSpace.NameSpace, manifestNameSpace.TemplatePath)

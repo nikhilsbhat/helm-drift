@@ -14,11 +14,11 @@ const (
 
 // DriftedRelease holds drift information of the selected release/chart.
 type DriftedRelease struct {
-	Chart      string      `json:"chart,omitempty" yaml:"chart,omitempty"`
-	Namespace  string      `json:"namespace,omitempty" yaml:"namespace,omitempty"`
-	Release    string      `json:"release,omitempty" yaml:"release,omitempty"`
-	HasDrift   bool        `json:"has_drift,omitempty" yaml:"has_drift,omitempty"`
-	Deviations []Deviation `json:"deviations,omitempty" yaml:"deviations,omitempty"`
+	Chart      string       `json:"chart,omitempty" yaml:"chart,omitempty"`
+	Namespace  string       `json:"namespace,omitempty" yaml:"namespace,omitempty"`
+	Release    string       `json:"release,omitempty" yaml:"release,omitempty"`
+	HasDrift   bool         `json:"has_drift,omitempty" yaml:"has_drift,omitempty"`
+	Deviations []*Deviation `json:"deviations,omitempty" yaml:"deviations,omitempty"`
 }
 
 // Deviation holds drift information of all manifests from the selected release/chart.
@@ -34,8 +34,8 @@ type Deviation struct {
 }
 
 type (
-	Deviations      []Deviation
-	DriftedReleases []DriftedRelease
+	Deviations      []*Deviation
+	DriftedReleases []*DriftedRelease
 )
 
 // Drifted returns Yes if the release has Drifted.
@@ -48,8 +48,8 @@ func (dvn *DriftedRelease) Drifted() string {
 }
 
 // Status returns Failed if at least one of the release has Drifted.
-func (dvn DriftedReleases) Status() string {
-	hasDrift := funk.Contains(dvn, func(dft DriftedRelease) bool {
+func (dvn *DriftedReleases) Status() string {
+	hasDrift := funk.Contains(*dvn, func(dft *DriftedRelease) bool {
 		return dft.HasDrift
 	})
 
@@ -61,10 +61,10 @@ func (dvn DriftedReleases) Status() string {
 }
 
 // Count returns total number of drifted release.
-func (dvn DriftedReleases) Count() int {
+func (dvn *DriftedReleases) Count() int {
 	var count int
 
-	for _, dft := range dvn {
+	for _, dft := range *dvn {
 		if dft.HasDrift {
 			count++
 		}
@@ -75,7 +75,7 @@ func (dvn DriftedReleases) Count() int {
 
 // Drifted returns Yes if at least one of the release has Drifted.
 func (dvn *DriftedReleases) Drifted() string {
-	hasDrift := funk.Contains(*dvn, func(dft DriftedRelease) bool {
+	hasDrift := funk.Contains(&dvn, func(dft DriftedRelease) bool {
 		return dft.HasDrift
 	})
 
@@ -108,8 +108,8 @@ func (dvn *Deviations) GetDriftAsMap(chart, release, time string) map[string]int
 }
 
 // Status returns Failed if at least one of the manifest in release has Drifted.
-func (dvn Deviations) Status() string {
-	hasDrift := funk.Contains(dvn, func(dft Deviation) bool {
+func (dvn *Deviations) Status() string {
+	hasDrift := funk.Contains(*dvn, func(dft *Deviation) bool {
 		return dft.HasDrift
 	})
 
@@ -121,10 +121,10 @@ func (dvn Deviations) Status() string {
 }
 
 // Count returns total number of drifts in release.
-func (dvn Deviations) Count() int {
+func (dvn *Deviations) Count() int {
 	var count int
 
-	for _, dft := range dvn {
+	for _, dft := range *dvn {
 		if dft.HasDrift {
 			count++
 		}

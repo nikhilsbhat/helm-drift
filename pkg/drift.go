@@ -2,11 +2,15 @@ package pkg
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
+	"github.com/nikhilsbhat/common/errors"
+	"github.com/nikhilsbhat/common/renderer"
 	"github.com/nikhilsbhat/helm-drift/pkg/deviation"
 	"github.com/sirupsen/logrus"
 	"k8s.io/client-go/util/homedir"
@@ -24,11 +28,8 @@ type Drift struct {
 	SkipTests          bool       `json:"skip_tests,omitempty"           yaml:"skip_tests,omitempty"`
 	SkipValidation     bool       `json:"skip_validation,omitempty"      yaml:"skip_validation,omitempty"`
 	SkipClean          bool       `json:"skip_clean,omitempty"           yaml:"skip_clean,omitempty"`
-	Summary            bool       `json:"summary,omitempty"              yaml:"summary,omitempty"`
 	FromRelease        bool       `json:"from_release,omitempty"         yaml:"from_release,omitempty"`
 	NoColor            bool       `json:"no_color,omitempty"             yaml:"no_color,omitempty"`
-	JSON               bool       `json:"json,omitempty"                 yaml:"json,omitempty"`
-	YAML               bool       `json:"yaml,omitempty"                 yaml:"yaml,omitempty"`
 	ExitWithError      bool       `json:"exit_with_error,omitempty"      yaml:"exit_with_error,omitempty"`
 	Report             bool       `json:"report,omitempty"               yaml:"report,omitempty"`
 	All                bool       `json:"all,omitempty"                  yaml:"all,omitempty"`
@@ -40,6 +41,7 @@ type Drift struct {
 	Revision           int        `json:"revision,omitempty"             yaml:"revision,omitempty"`
 	Concurrency        int        `json:"concurrency,omitempty"          yaml:"concurrency,omitempty"`
 	Kind               []string   `json:"kind,omitempty"                 yaml:"kind,omitempty"`
+	SkipReleases       []string   `json:"skip_releases,omitempty"        yaml:"skip_releases,omitempty"`
 	SkipKinds          []string   `json:"skip_kinds,omitempty"           yaml:"skip_kinds,omitempty"`
 	IgnoreHookTypes    []string   `json:"ignore_hook_types,omitempty"    yaml:"ignore_hook_types,omitempty"`
 	Values             []string   `json:"values,omitempty"               yaml:"values,omitempty"`
@@ -51,6 +53,12 @@ type Drift struct {
 	TempPath           string     `json:"temp_path,omitempty"            yaml:"temp_path,omitempty"`
 	CustomDiff         string     `json:"custom_diff,omitempty"          yaml:"custom_diff,omitempty"`
 	Name               string     `json:"name,omitempty"                 yaml:"name,omitempty"`
+	OutputFormat       string     `json:"output_format,omitempty" yaml:"output_format,omitempty"`
+	releasesToSkip     []resourcesInfo
+	json               bool
+	yaml               bool
+	csv                bool
+	table              bool
 	release            string
 	chart              string
 	namespace          string
@@ -59,6 +67,12 @@ type Drift struct {
 	timeSpent          float64
 	log                *logrus.Logger
 	writer             *bufio.Writer
+	renderer           renderer.Config
+}
+
+type resourcesInfo struct {
+	name      string
+	namespace string
 }
 
 // SetRelease sets release for helm drift.
@@ -74,6 +88,12 @@ func (drift *Drift) SetChart(chart string) {
 // SetWriter sets writer to be used by helm drift.
 func (drift *Drift) SetWriter(writer io.Writer) {
 	drift.writer = bufio.NewWriter(writer)
+}
+
+// SetRenderer sets renderer to Images.
+func (drift *Drift) SetRenderer() {
+	render := renderer.GetRenderer(os.Stdout, drift.log, drift.NoColor, drift.yaml, drift.json, drift.csv, drift.table)
+	drift.renderer = render
 }
 
 // GetDrift gets all the drifts that the given release/chart has.
@@ -118,7 +138,7 @@ func (drift *Drift) GetDrift() {
 	} else {
 		drift.timeSpent = time.Since(startTime).Seconds()
 
-		if err = drift.render([]deviation.DriftedRelease{out}); err != nil {
+		if err = drift.render([]*deviation.DriftedRelease{out}); err != nil {
 			drift.log.Fatalf("%v", err)
 		}
 	}
@@ -160,4 +180,23 @@ func (drift *Drift) setExternalDiff() error {
 	}
 
 	return os.Setenv("KUBECTL_EXTERNAL_DIFF", drift.CustomDiff)
+}
+
+func (drift *Drift) SetReleasesToSkips() error {
+	const resourceLength = 2
+
+	releasesToBeSkipped := make([]resourcesInfo, len(drift.SkipReleases))
+
+	for index, skipRelease := range drift.SkipReleases {
+		parsedRelease := strings.SplitN(skipRelease, "=", resourceLength)
+		if len(parsedRelease) != resourceLength {
+			return &errors.CommonError{Message: fmt.Sprintf("unable to parse release skip '%s'", skipRelease)}
+		}
+
+		releasesToBeSkipped[index] = resourcesInfo{name: parsedRelease[0], namespace: parsedRelease[1]}
+	}
+
+	drift.releasesToSkip = releasesToBeSkipped
+
+	return nil
 }

@@ -10,7 +10,7 @@ import (
 )
 
 // RunKubeDiffCmd runs the kubectl command with all predefined arguments.
-func (cmd *command) RunKubeDiffCmd(deviation deviation.Deviation) (deviation.Deviation, error) {
+func (cmd *command) RunKubeDiffCmd(deviation *deviation.Deviation) (*deviation.Deviation, error) {
 	cmd.log.Debugf("envionment variables that would be used: %v", cmd.baseCmd.Environ())
 
 	out, err := cmd.baseCmd.CombinedOutput()
@@ -33,7 +33,7 @@ func (cmd *command) RunKubeDiffCmd(deviation deviation.Deviation) (deviation.Dev
 	return deviation, nil
 }
 
-func (cmd *command) RunKubeCmd(deviation deviation.Deviation) ([]byte, error) {
+func (cmd *command) RunKubeCmd(deviation *deviation.Deviation) ([]byte, error) {
 	cmd.log.Debugf("envionment variables that would be used: %v", cmd.baseCmd.Environ())
 
 	out, err := cmd.baseCmd.CombinedOutput()

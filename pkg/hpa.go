@@ -35,7 +35,7 @@ func (drift *Drift) IsManagedByHPA(name, kind, nameSpace string) (bool, error) {
 
 	for _, item := range response.Items {
 		if item.Spec.ScaleTargetRef.Name == name && item.Spec.ScaleTargetRef.Kind == kind {
-			drift.log.Debugf("the '%s' '%s' is managed by hpa hence the drifts for this would be suppressed if enabled", item.Kind, item.Name)
+			drift.log.Debugf("the '%s' '%s' is managed by hpa hence the drifts for this would be suppressed if enabled", kind, name)
 
 			isManagedByHPA = true
 

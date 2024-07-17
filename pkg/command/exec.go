@@ -12,9 +12,9 @@ import (
 // Exec implements methods that set's and run's the kubectl command.
 type Exec interface {
 	SetKubeDiffCmd(kubeConfig string, kubeContext string, namespace string, args ...string)
-	RunKubeDiffCmd(deviation deviation.Deviation) (deviation.Deviation, error)
+	RunKubeDiffCmd(deviation *deviation.Deviation) (*deviation.Deviation, error)
 	SetKubeGetCmd(kubeConfig string, kubeContext string, namespace string, args ...string)
-	RunKubeCmd(deviation deviation.Deviation) ([]byte, error)
+	RunKubeCmd(deviation *deviation.Deviation) ([]byte, error)
 }
 
 type command struct {

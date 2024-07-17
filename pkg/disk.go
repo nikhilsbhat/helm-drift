@@ -15,13 +15,13 @@ const (
 	manifestFilePermission = 0o644
 )
 
-func (drift *Drift) renderToDisk(manifests []string, chartName, releaseName, releaseNamespace any) (deviation.DriftedRelease, error) {
+func (drift *Drift) renderToDisk(manifests []string, chartName, releaseName, releaseNamespace any) (*deviation.DriftedRelease, error) {
 	manifests = NewHelmTemplates(manifests).FilterByHelmHook(drift)
 	manifests = NewHelmTemplates(manifests).FilterBySkip(drift)
 	manifests = NewHelmTemplates(manifests).FilterByKind(drift)
 	manifests = NewHelmTemplates(manifests).FilterByName(drift)
 
-	releaseDrifted := deviation.DriftedRelease{
+	releaseDrifted := &deviation.DriftedRelease{
 		Namespace: releaseNamespace.(string),
 		Release:   releaseName.(string),
 		Chart:     chartName.(string),
@@ -41,7 +41,7 @@ func (drift *Drift) renderToDisk(manifests []string, chartName, releaseName, rel
 		return releaseDrifted, err
 	}
 
-	templates := make([]deviation.Deviation, 0)
+	templates := make([]*deviation.Deviation, 0)
 
 	for _, manifest := range manifests {
 		drift.log.Debugf("rendering manifest to disc, hold on for a moment....")
@@ -50,7 +50,7 @@ func (drift *Drift) renderToDisk(manifests []string, chartName, releaseName, rel
 		if err != nil {
 			log.Errorf("getting manifest information from template errored with '%v'", err)
 
-			return deviation.DriftedRelease{}, err
+			return nil, err
 		}
 
 		drift.log.Debugf("generating manifest '%s'", template.Resource)
@@ -59,12 +59,12 @@ func (drift *Drift) renderToDisk(manifests []string, chartName, releaseName, rel
 		if err = os.WriteFile(manifestPath, []byte(manifest), manifestFilePermission); err != nil {
 			log.Errorf("writing manifest '%s' to disk errored with '%v'", manifestPath, err)
 
-			return deviation.DriftedRelease{}, err
+			return nil, err
 		}
 
 		drift.log.Debugf("manifest for '%s' generated successfully", template.Resource)
 
-		dvn := deviation.Deviation{
+		dvn := &deviation.Deviation{
 			APIVersion:   template.APIVersion,
 			Kind:         template.Kind,
 			Resource:     template.Resource,
@@ -81,10 +81,10 @@ func (drift *Drift) renderToDisk(manifests []string, chartName, releaseName, rel
 		if err != nil {
 			log.Errorf("getting manifests information from templates errored with '%v'", err)
 
-			return deviation.DriftedRelease{}, err
+			return nil, err
 		}
 
-		return deviation.DriftedRelease{}, &errors.NotAllError{Manifests: resourceFromManifests, ResourceFromDeviations: templates}
+		return nil, &errors.NotAllError{Manifests: resourceFromManifests, ResourceFromDeviations: templates}
 	}
 
 	releaseDrifted.Deviations = templates

@@ -2,29 +2,22 @@ package pkg
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/nikhilsbhat/helm-drift/pkg/deviation"
 	"github.com/olekukonko/tablewriter"
-	"sigs.k8s.io/yaml"
 )
 
-func (drift *Drift) render(drifts []deviation.DriftedRelease) error {
+func (drift *Drift) render(drifts []*deviation.DriftedRelease) error {
 	drift.write(addNewLine(""))
 
-	if drift.Summary {
-		if drift.JSON {
-			return drift.toJSON(drifts)
-		}
+	if drift.json || drift.yaml {
+		return drift.renderer.Render(drifts)
+	}
 
-		if drift.YAML {
-			return drift.toYAML(drifts)
-		}
-
+	if drift.table {
 		drift.toTABLE(drifts)
 
 		return nil
@@ -35,7 +28,7 @@ func (drift *Drift) render(drifts []deviation.DriftedRelease) error {
 	return nil
 }
 
-func (drift *Drift) toTABLE(drifts []deviation.DriftedRelease) {
+func (drift *Drift) toTABLE(drifts []*deviation.DriftedRelease) {
 	drift.log.Debug("rendering the drifts in table format since --summary is enabled")
 	table := drift.tableSchema()
 
@@ -58,7 +51,7 @@ func (drift *Drift) toTABLE(drifts []deviation.DriftedRelease) {
 	}
 }
 
-func (drift *Drift) runTable(table *tablewriter.Table, deviations []deviation.DriftedRelease) bool {
+func (drift *Drift) runTable(table *tablewriter.Table, deviations []*deviation.DriftedRelease) bool {
 	drifts := deviations[0] //nolint:gosec
 
 	table.SetHeader([]string{"kind", "name", "drift"})
@@ -99,7 +92,7 @@ func (drift *Drift) runTable(table *tablewriter.Table, deviations []deviation.Dr
 	return hasDrift == deviation.Failed
 }
 
-func (drift *Drift) allTable(table *tablewriter.Table, deviations []deviation.DriftedRelease) bool {
+func (drift *Drift) allTable(table *tablewriter.Table, deviations []*deviation.DriftedRelease) bool {
 	table.SetHeader([]string{"release", "namespace", "drifted"})
 
 	for _, dvn := range deviations {
@@ -138,73 +131,7 @@ func (drift *Drift) allTable(table *tablewriter.Table, deviations []deviation.Dr
 	return dvnStatus == deviation.Failed
 }
 
-func (drift *Drift) toYAML(drifts []deviation.DriftedRelease) error {
-	drift.log.Debug("rendering the images in yaml format since --yaml is enabled")
-
-	driftMaps := make([]map[string]interface{}, 0)
-
-	for _, dft := range drifts {
-		deviations := deviation.Deviations(dft.Deviations)
-		driftMap := deviations.GetDriftAsMap(drift.chart, dft.Release, fmt.Sprintf("%v", drift.timeSpent))
-		driftMaps = append(driftMaps, driftMap)
-	}
-
-	kindYAML, err := yaml.Marshal(driftMaps)
-	if err != nil {
-		return err
-	}
-
-	yamlString := strings.Join([]string{"---", string(kindYAML)}, "\n")
-
-	_, err = drift.writer.Write([]byte(yamlString))
-	if err != nil {
-		drift.log.Fatalln(err)
-	}
-
-	defer func(writer *bufio.Writer) {
-		err = writer.Flush()
-		if err != nil {
-			drift.log.Fatalln(err)
-		}
-	}(drift.writer)
-
-	return drift.generateReport(kindYAML, "yaml")
-}
-
-func (drift *Drift) toJSON(drifts []deviation.DriftedRelease) error {
-	drift.log.Debug("rendering the images in json format since --json is enabled")
-
-	driftMaps := make([]map[string]interface{}, 0)
-
-	for _, dft := range drifts {
-		deviations := deviation.Deviations(dft.Deviations)
-		driftMap := deviations.GetDriftAsMap(drift.chart, drift.release, fmt.Sprintf("%v", drift.timeSpent))
-		driftMaps = append(driftMaps, driftMap)
-	}
-
-	kindJSON, err := json.MarshalIndent(driftMaps, " ", " ")
-	if err != nil {
-		return err
-	}
-
-	kindJSON = append(kindJSON, []byte("\n")...)
-
-	_, err = drift.writer.Write(kindJSON)
-	if err != nil {
-		drift.log.Fatalln(err)
-	}
-
-	defer func(writer *bufio.Writer) {
-		err = writer.Flush()
-		if err != nil {
-			drift.log.Fatalln(err)
-		}
-	}(drift.writer)
-
-	return drift.generateReport(kindJSON, "json")
-}
-
-func (drift *Drift) print(drifts []deviation.DriftedRelease) {
+func (drift *Drift) print(drifts []*deviation.DriftedRelease) {
 	if len(drifts) == 0 {
 		os.Exit(0)
 	}
@@ -232,8 +159,9 @@ func (drift *Drift) print(drifts []deviation.DriftedRelease) {
 				hasDrift = true
 
 				drift.write(addNewLine("------------------------------------------------------------------------------------"))
-				drift.write(addNewLine(addNewLine(fmt.Sprintf("Identified drifts in: '%s' '%s'", dvn.Kind, dvn.Resource))))
+				drift.write(addNewLine(fmt.Sprintf("Identified drifts in: '%s' '%s'", dvn.Kind, dvn.Resource)))
 				drift.write(addNewLine("-----------"))
+				drift.write(addNewLine(""))
 				drift.write(dvn.Deviations)
 				drift.write(addNewLine(addNewLine("-----------")))
 			}
@@ -256,7 +184,7 @@ func (drift *Drift) print(drifts []deviation.DriftedRelease) {
 		drift.write(addNewLine(fmt.Sprintf("Total number of drifts found           : %v", deviations.Count())))
 		drift.write(addNewLine(fmt.Sprintf("Status                                 : %s", deviations.Status())))
 	} else {
-		drift.write(addNewLine(fmt.Sprintf("Total number of drifts found           : %v", dvn.Drifted())))
+		drift.write(addNewLine(fmt.Sprintf("Total number of drifts found           : %v", dvn.Count())))
 		drift.write(addNewLine(fmt.Sprintf("Status                                 : %s", dvn.Status())))
 	}
 
@@ -304,24 +232,17 @@ func (drift *Drift) getCaption() string {
 	return fmt.Sprintf("Namespace: '%s'\nRelease: '%s'", drift.namespace, drift.release)
 }
 
-func (drift *Drift) generateReport(data []byte, fileType string) error {
-	if !drift.Report {
-		drift.log.Debug("--report was not enabled, not generating summary report")
-
-		return nil
+func (drift *Drift) SetOutputFormats() {
+	switch strings.ToLower(drift.OutputFormat) {
+	case "yaml", "y":
+		drift.yaml = true
+	case "json", "j":
+		drift.json = true
+	case "table", "t":
+		drift.table = true
+	default:
+		if len(drift.OutputFormat) != 0 {
+			drift.log.Fatalf("helm drift does not support format '%s', switching to default", drift.OutputFormat)
+		}
 	}
-
-	pwd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-
-	reportName := filepath.Join(pwd, fmt.Sprintf("helm_drift_%s.%s", drift.release, fileType))
-	if drift.All {
-		reportName = filepath.Join(pwd, fmt.Sprintf("helm_drift_all.%s", fileType))
-	}
-
-	drift.log.Debugf("generating summary report as '%s' since --report is enabled", reportName)
-
-	return os.WriteFile(reportName, data, manifestFilePermission)
 }
