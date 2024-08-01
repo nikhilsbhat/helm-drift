@@ -1,3 +1,4 @@
+//nolint:testifylint
 package k8s_test
 
 import (

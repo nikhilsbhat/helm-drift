@@ -20,7 +20,7 @@ func getRootCommand() *cobra.Command {
 		Short: "A utility that helps in identifying drifts in infrastructure",
 		Long:  `Identifies configuration drifts (mostly due to in-place edits) in the Kubernetes workloads provisioned via Helm charts.`,
 		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return cmd.Usage()
 		},
 	}
@@ -48,7 +48,7 @@ func getRunCommand() *cobra.Command {
 		Example: `helm drift run prometheus-standalone path/to/chart/prometheus-standalone -f ~/path/to/override-config.yaml
 helm drift run prometheus-standalone --from-release`,
 		Args: validateAndSetArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			drifts.SetLogger(drifts.LogLevel)
 			drifts.SetWriter(os.Stdout)
 			drifts.SetOutputFormats()
@@ -87,7 +87,7 @@ Do note that this is expensive operation since multiple kubectl command would be
 		Example: `helm drift all --kube-context k3d-sample
 helm drift all --kube-context k3d-sample -n sample`,
 		Args: cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			cmd.SilenceUsage = true
 
 			drifts.SetLogger(drifts.LogLevel)

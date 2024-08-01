@@ -7,6 +7,7 @@ import (
 
 	"github.com/nikhilsbhat/helm-drift/pkg/deviation"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"k8s.io/client-go/util/homedir"
 )
 
@@ -16,6 +17,7 @@ func TestDrift_NeatNew(t *testing.T) {
 		drift.SetLogger("debug")
 		drift.SetNamespace("sample")
 		drift.SetKubeConfig(filepath.Join(homedir.HomeDir(), ".kube", "config"))
+
 		dvn := deviation.Deviation{
 			APIVersion: "v1",
 			Kind:       "ServiceAccount",
@@ -23,7 +25,7 @@ func TestDrift_NeatNew(t *testing.T) {
 		}
 
 		out, err := drift.neat(dvn)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		assert.Nil(t, out)
 	})
