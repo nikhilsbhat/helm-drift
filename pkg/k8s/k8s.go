@@ -21,16 +21,17 @@ type ResourceInterface interface {
 }
 
 // Get helps in identifying kind form the kubernetes resource.
-func (resource *Resource) Get(dataMap string, key string, _ *logrus.Logger) (string, error) {
+func (resource *Resource) Get(dataMap string, key string, log *logrus.Logger) (string, error) {
 	if err := yaml.Unmarshal([]byte(dataMap), resource); err != nil {
 		return "", err
 	}
 
 	kindYaml := *resource
 
-	value, failedManifest := kindYaml[key].(string)
-	if !failedManifest {
-		return "", &errors.DriftError{Message: fmt.Sprintf("failed to get %s from the manifest, '%s' is not type string", key, key)}
+	value, manifestExists := kindYaml[key].(string)
+	if !manifestExists {
+		log.Warnf("failed to get '%s' from the manifest", key)
+		return "", nil
 	}
 
 	return value, nil
@@ -53,7 +54,7 @@ func (resource *Resource) GetMetadata(dataMap string, key string, log *logrus.Lo
 
 	value, failedManifest := metadata[key].(string)
 	if !failedManifest {
-		return "", &errors.DriftError{Message: fmt.Sprintf("failed to get %s from the manifest, '%s' is not type string", key, key)}
+		return "", &errors.DriftError{Message: fmt.Sprintf("failed to get %s from the metadata, '%s' is not type string", key, key)}
 	}
 
 	return value, nil
