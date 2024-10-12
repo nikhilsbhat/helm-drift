@@ -123,19 +123,19 @@ func TestK8sTestSuite(t *testing.T) {
 }
 
 func (suite *K8sTestSuite) TestResource_GetNameSpace() {
-	name, err := k8s.NewResource().GetMetadata(suite.resource, "sample", logrus.New())
+	name, err := k8s.NewResource().GetMetadata(suite.resource, "namespace", logrus.StandardLogger())
 	suite.NoError(err)
 	suite.Equal("sample", name)
 }
 
 func (suite *K8sTestSuite) TestResource_GetName() {
-	name, err := k8s.NewResource().GetMetadata(suite.resource, "name", nil)
+	name, err := k8s.NewResource().GetMetadata(suite.resource, "name", logrus.StandardLogger())
 	suite.NoError(err)
 	suite.Equal("sample", name)
 }
 
 func (suite *K8sTestSuite) TestResource_GetKind() {
-	kind, err := k8s.NewResource().Get(suite.resource, "", nil)
+	kind, err := k8s.NewResource().Get(suite.resource, "kind", logrus.StandardLogger())
 	suite.NoError(err)
 	suite.Equal("Deployment", kind)
 }

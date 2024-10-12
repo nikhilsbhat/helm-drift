@@ -26,11 +26,18 @@ func (resource *Resource) Get(dataMap string, key string, log *logrus.Logger) (s
 		return "", err
 	}
 
+	if resource == nil {
+		log.Warn("looks like manifest is empty, skipping it")
+
+		return "", nil
+	}
+
 	kindYaml := *resource
 
 	value, manifestExists := kindYaml[key].(string)
 	if !manifestExists {
 		log.Warnf("failed to get '%s' from the manifest", key)
+
 		return "", nil
 	}
 

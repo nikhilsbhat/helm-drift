@@ -16,21 +16,6 @@ type (
 	HelmTemplate  string
 )
 
-func (templates *HelmTemplates) FilterBySkip2(drift *Drift) []string {
-	return funk.Filter(*templates, func(tmpl string) bool {
-		if len(drift.SkipKinds) == 0 {
-			return true
-		}
-
-		kind, err := k8s.NewResource().Get(tmpl, "kind", nil)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		return !funk.Contains(drift.SkipKinds, kind)
-	}).([]string)
-}
-
 func (templates *HelmTemplates) FilterBySkip(drift *Drift) []string {
 	return funk.Filter(*templates, func(tmpl string) bool {
 		if len(drift.SkipKinds) == 0 {
