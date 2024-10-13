@@ -39,6 +39,7 @@ type Drift struct {
 	IgnoreHPAChanges     bool       `json:"ignore_hpa_changes,omitempty"      yaml:"ignore_hpa_changes,omitempty"`
 	Revision             int        `json:"revision,omitempty"                yaml:"revision,omitempty"`
 	Concurrency          int        `json:"concurrency,omitempty"             yaml:"concurrency,omitempty"`
+	Limit                int        `json:"limit,omitempty"                   yaml:"limit,omitempty"`
 	Kind                 []string   `json:"kind,omitempty"                    yaml:"kind,omitempty"`
 	SkipReleases         []string   `json:"skip_releases,omitempty"           yaml:"skip_releases,omitempty"`
 	SkipKinds            []string   `json:"skip_kinds,omitempty"              yaml:"skip_kinds,omitempty"`

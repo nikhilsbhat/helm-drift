@@ -22,7 +22,7 @@ func (templates *HelmTemplates) FilterBySkip(drift *Drift) []string {
 			return true
 		}
 
-		kind, err := k8s.NewResource().Get(tmpl, "kind", nil)
+		kind, err := k8s.NewResource().Get(tmpl, "kind", drift.log)
 		if err != nil {
 			log.Fatal(err)
 		}

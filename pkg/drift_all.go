@@ -39,6 +39,18 @@ func (drift *Drift) GetAllDrift() {
 
 	driftedReleases := make([]*deviation.DriftedRelease, 0)
 
+	sem := make(chan struct{}, func() int {
+		if drift.Limit != 0 {
+			return drift.Limit
+		}
+
+		return len(releases)
+	}())
+
+	if drift.Limit != 0 {
+		drift.log.Debugf("limit on concurrency is set to '%d', so batching the executions of helm releases", drift.Limit)
+	}
+
 	var waitGroup sync.WaitGroup
 
 	errChan := make(chan error)
@@ -51,8 +63,12 @@ func (drift *Drift) GetAllDrift() {
 	}()
 
 	for _, release := range releases {
+		sem <- struct{}{}
+
 		go func(release *helmRelease.Release) {
 			defer waitGroup.Done()
+			defer func() { <-sem }()
+
 			drift.log.Debugf("identifying drifts for release '%s'", release.Name)
 
 			kubeKindTemplates := drift.getTemplates([]byte(release.Manifest))

@@ -67,6 +67,10 @@ func registerCommonFlags(cmd *cobra.Command) {
 		"list of hooks to ignore while identifying the drifts")
 	cmd.PersistentFlags().BoolVarP(&drifts.IgnoreHPAChanges, "ignore-hpa-changes", "", false,
 		"when enabled, the drifts caused on workload due to hpa scaling would be ignored")
+	cmd.PersistentFlags().IntVarP(&drifts.Limit, "limit-threads", "", 0,
+		"limit the number of threads spawned by the plugin for executing the 'kubectl diff' command. "+
+			"This helps in batching tasks efficiently without overwhelming system resources. "+
+			"By default, it is set to match the number of manifests present in the Helm chart or release.")
 }
 
 // Registers flags specific to command, run.

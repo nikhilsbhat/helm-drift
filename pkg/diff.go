@@ -15,7 +15,20 @@ func (drift *Drift) Diff(renderedManifests *deviation.DriftedRelease) (*deviatio
 		waitGroup sync.WaitGroup
 		errChan   = make(chan error, len(renderedManifests.Deviations))
 		diffs     = make([]*deviation.Deviation, len(renderedManifests.Deviations))
+		sem       = make(chan struct{}, func() int {
+			if drift.Limit != 0 {
+				return drift.Limit
+			}
+
+			return len(renderedManifests.Deviations)
+		}())
 	)
+
+	if drift.Limit != 0 {
+		drift.log.Infof(
+			"limit on concurrency is set to '%d', so batching the 'kubectl diff' executions", drift.Limit,
+		)
+	}
 
 	waitGroup.Add(len(renderedManifests.Deviations))
 
@@ -32,8 +45,11 @@ func (drift *Drift) Diff(renderedManifests *deviation.DriftedRelease) (*deviatio
 	}
 
 	for index, dvn := range renderedManifests.Deviations {
+		sem <- struct{}{}
+
 		go func(index int, dvn *deviation.Deviation) {
 			defer waitGroup.Done()
+			defer func() { <-sem }()
 
 			manifestPath := dvn.ManifestPath
 

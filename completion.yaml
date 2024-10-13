@@ -22,6 +22,7 @@ commands:
       - ignore-hooks
       - ignore-hpa-changes
       - kind
+      - limit-threads
       - name
       - output
       - regex
@@ -38,6 +39,7 @@ commands:
       - ignore-hpa-changes
       - is-default-namespace
       - kind
+      - limit-threads
       - name
       - output
       - regex

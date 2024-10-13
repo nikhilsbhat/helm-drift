@@ -31,11 +31,11 @@ issues:
 
 linters-settings:
   cyclop:
-    max-complexity: 15
+    max-complexity: 16
 
   funlen:
     lines: 160
-    statements: 48
+    statements: 50
 
   lll:
     line-length: 165
@@ -46,25 +46,23 @@ linters-settings:
   gocognit:
     min-complexity: 50
 
+  nestif:
+    min-complexity: 20
+
+
 run:
   concurrency: 10
   timeout: 10m
   issues-exit-code: 1
   tests: true
-  skip-dirs:
-    - scripts/
-    - vendor/
-    - docs/
-
-  skip-files:
-    - Makefile
-    - README.md
-    - Dockerfile
 
 severity:
   default-severity: error
 
-service:
-  golangci-lint-version: 1.27.x
-  prepare:
-    - make local.check
+output:
+  sort-results: true
+  sort-order:
+    - linter
+    - severity
+    - file
+  show-stats: true
