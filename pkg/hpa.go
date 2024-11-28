@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/acarl005/stripansi"
 	"github.com/nikhilsbhat/helm-drift/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -78,6 +79,8 @@ func (drift *Drift) HasOnlyChangesScaledByHpa(diffOutput string) (bool, error) {
 	}
 
 	hasOnlyChangesScaledByHpa := true
+
+	diffOutput = stripansi.Strip(diffOutput)
 
 	stringReader := strings.NewReader(diffOutput)
 	scanner := bufio.NewScanner(stringReader)

@@ -3,6 +3,7 @@ module github.com/nikhilsbhat/helm-drift
 go 1.22.5
 
 require (
+	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/goccy/go-yaml v1.11.3
 	github.com/nikhilsbhat/common v0.0.6-0.20240705174411-75b5dafa56bb
 	github.com/olekukonko/tablewriter v0.0.5
