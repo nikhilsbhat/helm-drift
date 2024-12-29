@@ -1,3 +1,5 @@
+include makefiles/security.mk
+
 GOFMT_FILES?=$(shell find . -not -path "./vendor/*" -type f -name '*.go')
 APP_NAME?=helm-drift
 APP_DIR?=$(shell git rev-parse --show-toplevel)
@@ -24,32 +26,32 @@ endif
 help: ## Prints help (only for targets with comments)
 	@grep -E '^[a-zA-Z0-9._-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-local.fmt: ## Lints all the go code in the application.
+local/fmt: ## Lints all the go code in the application.
 	gofmt -w $(GOFMT_FILES)
 	$(GOBIN)/goimports -w $(GOFMT_FILES)
 	$(GOBIN)/gofumpt -l -w $(GOFMT_FILES)
 	$(GOBIN)/gci write $(GOFMT_FILES) --skip-generated -s standard -s default
 
-local.check: local.fmt ## Loads all the dependencies to vendor directory
+local/check: local/fmt ## Loads all the dependencies to vendor directory
 	go mod vendor
 	go mod tidy
 
-local.build: local.check ## Generates the artifact with the help of 'go build'
+local/build: local/check ## Generates the artifact with the help of 'go build'
 	@go build -o $(APP_NAME)_v$(VERSION) -ldflags="-s -w"
 
-local.deploy: local.build ## Generates the artifact with the help of 'go build'
+local/deploy: local/build ## Generates the artifact with the help of 'go build'
 	@rm -rf ${HOME}/Library/helm/plugins/helm-drift/bin/helm-drift
 	@cp $(APP_NAME)_v$(VERSION) ${HOME}/Library/helm/plugins/helm-drift/bin/helm-drift
 
-local.push: local.build ## Pushes built artifact to the specified location
+local/push: local/build ## Pushes built artifact to the specified location
 
-local.run: local.build ## Generates the artifact and start the service in the current directory
+local/run: local/build ## Generates the artifact and start the service in the current directory
 	./${APP_NAME}
 
-publish: local.check ## Builds and publishes the app
+publish: local/check ## Builds and publishes the app
 	GOVERSION=${GOVERSION} BUILD_ENVIRONMENT=${BUILD_ENVIRONMENT} PLUGIN_PATH=${APP_DIR} goreleaser release --clean
 
-mock.publish: local.check ## Builds and mocks app release
+mock/publish: local/check ## Builds and mocks app release
 	GOVERSION=${GOVERSION} BUILD_ENVIRONMENT=${BUILD_ENVIRONMENT} PLUGIN_PATH=${APP_DIR} goreleaser release --skip=publish --clean
 
 lint: ## Lint's application for errors, it is a linters aggregator (https://github.com/golangci/golangci-lint).
@@ -63,13 +65,13 @@ dev.prerequisite.up: ## Sets up the development environment with all necessary c
 
 dev.prerequisite.purge: ## Teardown the development environment by removing all components.
 
-install.hooks: ## install pre-push hooks for the repository.
+install/hooks: ## install pre-push hooks for the repository.
 	${APP_DIR}/scripts/hook.sh ${APP_DIR}
 
-generate.mock: ## generates mocks for the selected source packages.
+generate/mock: ## generates mocks for the selected source packages.
 	@go generate ${SRC_PACKAGES}
 
-generate.document: ## generates cli documents using 'github.com/spf13/cobra/doc'.
+generate/document: ## generates cli documents using 'github.com/spf13/cobra/doc'.
 	@go generate github.com/nikhilsbhat/helm-drift/docs
 
 test: ## runs test cases
