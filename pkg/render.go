@@ -27,7 +27,7 @@ func (drift *Drift) render(drifts []*deviation.DriftedRelease) error {
 
 	drift.print(drifts)
 
-	if release.Drifted() && drift.DisableExitWithError {
+	if release.Drifted() && !drift.DisableExitWithError {
 		os.Exit(1)
 	}
 
