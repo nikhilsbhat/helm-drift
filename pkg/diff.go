@@ -84,10 +84,10 @@ func (drift *Drift) Diff(renderedManifests *deviation.DriftedRelease) (*deviatio
 				return
 			}
 
-			wasHpaScaled, err := drift.WasScaledByHpa(dft.Deviations)
+			hasOnlyChangesScaledByHpa, err := drift.HasOnlyChangesScaledByHpa(dft.Deviations)
 			handleError(err)
 
-			if dft.HasDrift && (!wasHpaScaled || !drift.IgnoreHPAChanges) {
+			if dft.HasDrift && (!hasOnlyChangesScaledByHpa || !drift.IgnoreHPAChanges) {
 				renderedManifests.HasDrift = true
 			} else {
 				dft.HasDrift = false

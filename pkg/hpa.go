@@ -4,8 +4,10 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"os"
 	"strings"
 
+	"github.com/acarl005/stripansi"
 	"github.com/nikhilsbhat/helm-drift/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -54,20 +56,84 @@ func buildConfigWithContextFromFlags(context string, kubeConfigPath string) (*re
 		}).ClientConfig()
 }
 
-func (drift *Drift) WasScaledByHpa(diffOutput string) (bool, error) {
-	stringReader := strings.NewReader(diffOutput)
+func (drift *Drift) HasOnlyChangesScaledByHpa(diffOutput string) (bool, error) {
+	customDiff := ""
+	if drift.CustomDiff != "" {
+		customDiff = drift.CustomDiff
+	} else if os.Getenv("KUBECTL_EXTERNAL_DIFF") != "" {
+		customDiff = os.Getenv("KUBECTL_EXTERNAL_DIFF")
+	}
 
+	diffToolUsed := ""
+	if customDiff != "" {
+		diffToolUsed = strings.Split(customDiff, " ")[0]
+	} else {
+		diffToolUsed = "diff"
+	}
+
+	drift.log.Infof("custom diff: %s", diffToolUsed)
+
+	if diffToolUsed != "diff" && diffToolUsed != "dyff" {
+		drift.log.Warnf("--ignore-hpa-changes currently only supports diff and dyff, not '%s'", diffToolUsed)
+		return false, nil
+	}
+
+	hasOnlyChangesScaledByHpa := true
+
+	diffOutput = stripansi.Strip(diffOutput)
+
+	stringReader := strings.NewReader(diffOutput)
 	scanner := bufio.NewScanner(stringReader)
 	for scanner.Scan() {
 		line := scanner.Text()
-		if strings.Contains(line, "+  replicas:") {
-			return true, nil
+
+		if diffToolUsed == "diff" && !diffLineHasChangesNonHpaRelated(line) {
+			continue
+		} else if diffToolUsed == "dyff" && !dyffLineHasChangesNonHpaRelated(line) {
+			continue
 		}
+
+		hasOnlyChangesScaledByHpa = false
+		break
 	}
 
 	if err := scanner.Err(); err != nil {
 		return false, err
 	}
 
-	return false, nil
+	return hasOnlyChangesScaledByHpa, nil
+}
+
+func diffLineHasChangesNonHpaRelated(line string) bool {
+	// skip diff output lines starting with +++ or ---
+	if strings.HasPrefix(line, "+++") || strings.HasPrefix(line, "---") {
+		return false
+	}
+
+	// skip lines that have no changes
+	if !strings.HasPrefix(line, "+") && !strings.HasPrefix(line, "-") {
+		return false
+	}
+
+	// check if the line changed is related to replicas or generation, then continue, since we are looking for other fields changed besides replicas and generation
+	if strings.Contains(line, "+  replicas:") || strings.Contains(line, "-  replicas:") ||
+		strings.Contains(line, "+  generation:") || strings.Contains(line, "-  generation:") {
+		return false
+	}
+
+	return true
+}
+
+func dyffLineHasChangesNonHpaRelated(line string) bool {
+	// skip empty lines and lines starting with space
+	if line == "" || strings.HasPrefix(line, " ") {
+		return false
+	}
+
+	// check if the line changed is related to replicas or generation, then continue, since we are looking for other fields changed besides replicas and generation
+	if strings.Contains(line, "spec.replicas") || strings.Contains(line, "metadata.generation") {
+		return false
+	}
+
+	return true
 }
