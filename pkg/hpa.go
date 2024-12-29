@@ -15,6 +15,11 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
+const (
+	toolDiff = "diff"
+	toolDyff = "dyff"
+)
+
 func (drift *Drift) IsManagedByHPA(name, kind, nameSpace string) (bool, error) {
 	config, err := buildConfigWithContextFromFlags(drift.kubeContext, drift.kubeConfig)
 	if err != nil {
@@ -57,43 +62,38 @@ func buildConfigWithContextFromFlags(context string, kubeConfigPath string) (*re
 }
 
 func (drift *Drift) HasOnlyChangesScaledByHpa(diffOutput string) (bool, error) {
-	customDiff := ""
-	if drift.CustomDiff != "" {
-		customDiff = drift.CustomDiff
-	} else if os.Getenv("KUBECTL_EXTERNAL_DIFF") != "" {
+	customDiff := drift.CustomDiff
+	if customDiff == "" {
 		customDiff = os.Getenv("KUBECTL_EXTERNAL_DIFF")
 	}
 
-	diffToolUsed := ""
+	diffToolUsed := toolDiff
 	if customDiff != "" {
 		diffToolUsed = strings.Split(customDiff, " ")[0]
-	} else {
-		diffToolUsed = "diff"
 	}
 
 	drift.log.Infof("custom diff: %s", diffToolUsed)
 
-	if diffToolUsed != "diff" && diffToolUsed != "dyff" {
-		drift.log.Warnf("--ignore-hpa-changes currently only supports diff and dyff, not '%s'", diffToolUsed)
+	if diffToolUsed != toolDiff && diffToolUsed != toolDyff {
+		drift.log.Warnf("--ignore-hpa-changes currently only supports %s and %s, not '%s'", toolDiff, toolDyff, diffToolUsed)
+
 		return false, nil
 	}
 
-	hasOnlyChangesScaledByHpa := true
-
 	diffOutput = stripansi.Strip(diffOutput)
 
-	stringReader := strings.NewReader(diffOutput)
-	scanner := bufio.NewScanner(stringReader)
+	scanner := bufio.NewScanner(strings.NewReader(diffOutput))
+
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		if diffToolUsed == "diff" && !diffLineHasChangesNonHpaRelated(line) {
-			continue
-		} else if diffToolUsed == "dyff" && !dyffLineHasChangesNonHpaRelated(line) {
+		isNonHpaChange := (diffToolUsed == toolDiff && diffLineHasChangesNonHpaRelated(line)) ||
+			(diffToolUsed == toolDyff && dyffLineHasChangesNonHpaRelated(line))
+
+		if !isNonHpaChange {
 			continue
 		}
 
-		hasOnlyChangesScaledByHpa = false
 		break
 	}
 
@@ -101,7 +101,7 @@ func (drift *Drift) HasOnlyChangesScaledByHpa(diffOutput string) (bool, error) {
 		return false, err
 	}
 
-	return hasOnlyChangesScaledByHpa, nil
+	return true, nil
 }
 
 func diffLineHasChangesNonHpaRelated(line string) bool {

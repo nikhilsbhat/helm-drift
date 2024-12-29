@@ -17,6 +17,9 @@ linters:
     - tagalign
     - dupword
     - perfsprint
+    - exportloopref
+    - exhaustivestruct
+    - maligned
 
 issues:
   exclude-rules:
