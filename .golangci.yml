@@ -1,71 +1,74 @@
----
-linters:
-  disable-all: false
-  enable-all: true
-  disable:
-    - gochecknoglobals
-    - tagliatelle
-    - exhaustivestruct
-    - exhaustruct
-    - forbidigo
-    - paralleltest
-    - ireturn
-    - wrapcheck
-    - forcetypeassert
-    - maligned
-    - depguard
-    - tagalign
-    - dupword
-    - perfsprint
-    - exportloopref
-    - exhaustivestruct
-    - maligned
-
-issues:
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - gomnd
-
-    # https://github.com/go-critic/go-critic/issues/926
-    - linters:
-        - gocritic
-      text: "unnecessaryDefer:"
-
-linters-settings:
-  cyclop:
-    max-complexity: 16
-
-  funlen:
-    lines: 160
-    statements: 50
-
-  lll:
-    line-length: 165
-
-  dupl:
-    threshold: 450
-
-  gocognit:
-    min-complexity: 50
-
-  nestif:
-    min-complexity: 20
-
-
+version: "2"
 run:
   concurrency: 10
-  timeout: 10m
   issues-exit-code: 1
   tests: true
-
-severity:
-  default-severity: error
+  modules-download-mode: vendor
 
 output:
-  sort-results: true
   sort-order:
     - linter
     - severity
     - file
-  show-stats: true
+linters:
+  default: all
+  disable:
+    - cyclop
+    - depguard
+    - exhaustruct
+    - forbidigo
+    - forcetypeassert
+    - gochecknoglobals
+    - goconst
+    - interfacebloat
+    - ireturn
+    - nolintlint
+    - paralleltest
+    - perfsprint
+    - tagalign
+    - tagliatelle
+    - wrapcheck
+    - noinlineerr
+  settings:
+    dupl:
+      threshold: 100
+    funlen:
+      lines: 110
+      statements: 50
+    gocognit:
+      min-complexity: 60
+    lll:
+      line-length: 145
+    nestif:
+      min-complexity: 20
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - mnd
+        path: _test\.go
+      - linters:
+          - gocritic
+        text: 'unnecessaryDefer:'
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+severity:
+  default: error
+formatters:
+  enable:
+    - gofmt
+    - gofumpt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

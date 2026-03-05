@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -26,7 +27,11 @@ func getRootCommand() *cobra.Command {
 	}
 	rootCommand.SetUsageTemplate(getUsageTemplate())
 
-	envSettings = envSettings.New()
+	envSetting, err := envSettings.New()
+	if err != nil {
+		log.Fatal(err)
+	}
+	envSettings = envSetting
 
 	return rootCommand
 }
