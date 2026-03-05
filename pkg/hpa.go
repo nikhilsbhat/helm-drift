@@ -115,7 +115,8 @@ func diffLineHasChangesNonHpaRelated(line string) bool {
 		return false
 	}
 
-	// check if the line changed is related to replicas or generation, then continue, since we are looking for other fields changed besides replicas and generation
+	// check if the line changed is related to replicas or generation, then continue,
+	// since we are looking for other fields changed besides replicas and generation
 	if strings.Contains(line, "+  replicas:") || strings.Contains(line, "-  replicas:") ||
 		strings.Contains(line, "+  generation:") || strings.Contains(line, "-  generation:") {
 		return false
@@ -130,7 +131,8 @@ func dyffLineHasChangesNonHpaRelated(line string) bool {
 		return false
 	}
 
-	// check if the line changed is related to replicas or generation, then continue, since we are looking for other fields changed besides replicas and generation
+	// check if the line changed is related to replicas or generation, then continue,
+	// since we are looking for other fields changed besides replicas and generation
 	if strings.Contains(line, "spec.replicas") || strings.Contains(line, "metadata.generation") {
 		return false
 	}

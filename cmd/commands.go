@@ -31,6 +31,7 @@ func getRootCommand() *cobra.Command {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	envSettings = envSetting
 
 	return rootCommand
@@ -58,6 +59,7 @@ helm drift run prometheus-standalone --from-release`,
 			drifts.SetWriter(os.Stdout)
 			drifts.SetOutputFormats()
 			drifts.SetRenderer()
+
 			cmd.SilenceUsage = true
 
 			drifts.SetKubeConfig(envSettings.KubeConfig)

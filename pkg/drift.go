@@ -144,18 +144,6 @@ func (drift *Drift) GetDrift() {
 	}
 }
 
-func (drift *Drift) getChartManifests() ([]byte, error) {
-	if drift.FromRelease {
-		drift.log.Debugf("from-release is selected, hence fetching manifests for '%s' from helm release", drift.release)
-
-		return drift.getChartFromRelease()
-	}
-
-	drift.log.Debugf("fetching manifests for '%s' by rendering helm template locally", drift.release)
-
-	return drift.getChartFromTemplate()
-}
-
 func (drift *Drift) SetNamespace(namespace string) {
 	drift.namespace = namespace
 	if len(drift.namespace) == 0 {
@@ -172,14 +160,6 @@ func (drift *Drift) SetKubeConfig(kubeConfig string) {
 
 func (drift *Drift) SetKubeContext(kubeContext string) {
 	drift.kubeContext = kubeContext
-}
-
-func (drift *Drift) setExternalDiff() error {
-	if len(drift.CustomDiff) == 0 {
-		return nil
-	}
-
-	return os.Setenv("KUBECTL_EXTERNAL_DIFF", drift.CustomDiff)
 }
 
 func (drift *Drift) SetReleasesToSkips() error {
@@ -199,4 +179,24 @@ func (drift *Drift) SetReleasesToSkips() error {
 	drift.releasesToSkip = releasesToBeSkipped
 
 	return nil
+}
+
+func (drift *Drift) setExternalDiff() error {
+	if len(drift.CustomDiff) == 0 {
+		return nil
+	}
+
+	return os.Setenv("KUBECTL_EXTERNAL_DIFF", drift.CustomDiff)
+}
+
+func (drift *Drift) getChartManifests() ([]byte, error) {
+	if drift.FromRelease {
+		drift.log.Debugf("from-release is selected, hence fetching manifests for '%s' from helm release", drift.release)
+
+		return drift.getChartFromRelease()
+	}
+
+	drift.log.Debugf("fetching manifests for '%s' by rendering helm template locally", drift.release)
+
+	return drift.getChartFromTemplate()
 }

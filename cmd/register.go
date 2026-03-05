@@ -1,11 +1,11 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"log"
 
 	"github.com/nikhilsbhat/helm-drift/pkg"
+	"github.com/nikhilsbhat/helm-drift/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -58,8 +58,14 @@ func validateAndSetArgs(cmd *cobra.Command, args []string) error {
 	logger.SetFormatter(&logrus.JSONFormatter{})
 	cliLogger = logger
 
-	minArgError := errors.New("[RELEASE] or [CHART] cannot be empty")
-	oneOfThemError := errors.New("when '--from-release' is enabled, valid input is [RELEASE] and not both [RELEASE] [CHART]")
+	minArgError := &errors.DriftError{
+		Message: "[RELEASE] or [CHART] cannot be empty",
+	}
+
+	oneOfThemError := &errors.DriftError{
+		Message: "when '--from-release' is enabled, valid input is [RELEASE] and not both [RELEASE] [CHART]",
+	}
+
 	cmd.SilenceUsage = true
 
 	if drifts.Revision != 0 && !drifts.FromRelease {
@@ -72,7 +78,7 @@ func validateAndSetArgs(cmd *cobra.Command, args []string) error {
 		if len(args) != getArgumentCountLocal {
 			log.Println(minArgError)
 
-			return fmt.Errorf("%w", minArgError)
+			return &errors.DriftError{Message: fmt.Sprintf("%v", minArgError)}
 		}
 
 		drifts.SetChart(args[1])

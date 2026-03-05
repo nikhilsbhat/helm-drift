@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/nikhilsbhat/common/errors"
 )
 
 type ValueFiles []string
@@ -28,7 +30,7 @@ func (v *ValueFiles) Valid() error {
 		return nil
 	}
 
-	return fmt.Errorf("%s", errStr)
+	return &errors.CommonError{Message: errStr}
 }
 
 func (v *ValueFiles) Type() string {

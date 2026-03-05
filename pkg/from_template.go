@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -59,7 +60,7 @@ func (drift *Drift) getChartFromTemplate() ([]byte, error) {
 
 	drift.log.Debugf("rendering helm chart with following commands/flags '%s'", strings.Join(args, ", "))
 
-	cmd := exec.Command(os.Getenv("HELM_BIN"), args...) //nolint:gosec
+	cmd := exec.CommandContext(context.Background(), os.Getenv("HELM_BIN"), args...) //nolint:gosec
 	output, err := cmd.Output()
 
 	var exitErr *exec.ExitError

@@ -2,13 +2,13 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/nikhilsbhat/common/errors"
-	"k8s.io/client-go/tools/clientcmd"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/nikhilsbhat/helm-drift/pkg/errors"
 	"github.com/spf13/pflag"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 type EnvSettings struct {
@@ -40,7 +40,7 @@ func (s *EnvSettings) AddFlags(_ *pflag.FlagSet) {
 func findKubeConfigForContext(context string) (string, error) {
 	KubeConfigFromEnv := os.Getenv("KUBECONFIG")
 	if KubeConfigFromEnv == "" {
-		return "", &errors.CommonError{Message: "'KUBECONFIG' env variable is not set"}
+		return "", &errors.DriftError{Message: "'KUBECONFIG' env variable is not set"}
 	}
 
 	paths := strings.Split(KubeConfigFromEnv, ":")
@@ -61,7 +61,7 @@ func findKubeConfigForContext(context string) (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("context %q not found in any kubeconfig file", context)
+	return "", &errors.DriftError{Message: fmt.Sprintf("context %q not found in any kubeconfig file", context)}
 }
 
 func expandHome(path string) (string, error) {
@@ -70,6 +70,7 @@ func expandHome(path string) (string, error) {
 		if err != nil {
 			return "", err
 		}
+
 		return filepath.Join(home, path[1:]), nil
 	}
 

@@ -40,6 +40,7 @@ func (drift *Drift) Diff(renderedManifests *deviation.DriftedRelease) (*deviatio
 	handleError := func(err error) {
 		if err != nil {
 			drift.log.Error(err)
+
 			errChan <- err
 		}
 	}

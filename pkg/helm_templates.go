@@ -16,6 +16,12 @@ type (
 	HelmTemplate  string
 )
 
+func NewHelmTemplates(templates []string) *HelmTemplates {
+	helmTemplates := HelmTemplates(templates)
+
+	return &helmTemplates
+}
+
 func (templates *HelmTemplates) FilterBySkip(drift *Drift) []string {
 	return funk.Filter(*templates, func(tmpl string) bool {
 		if len(drift.SkipKinds) == 0 {
@@ -96,6 +102,12 @@ func (templates *HelmTemplates) Get(log *logrus.Logger) ([]*deviation.Deviation,
 	return deviations, nil
 }
 
+func NewHelmTemplate(template string) *HelmTemplate {
+	helmTemplate := HelmTemplate(template)
+
+	return &helmTemplate
+}
+
 func (template *HelmTemplate) Get(log *logrus.Logger) (*deviation.Deviation, error) {
 	name, err := k8s.NewResource().GetMetadata(string(*template), "name", log)
 	if err != nil {
@@ -133,16 +145,4 @@ func (template *HelmTemplate) GetTemplate() string {
 	val := *template
 
 	return string(val)
-}
-
-func NewHelmTemplate(template string) *HelmTemplate {
-	helmTemplate := HelmTemplate(template)
-
-	return &helmTemplate
-}
-
-func NewHelmTemplates(templates []string) *HelmTemplates {
-	helmTemplates := HelmTemplates(templates)
-
-	return &helmTemplates
 }

@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os/exec"
@@ -24,7 +25,7 @@ func (drift *Drift) ValidatePrerequisite() bool {
 		success = false
 	}
 
-	if goPath := exec.Command("kubectl"); goPath.Err != nil {
+	if goPath := exec.CommandContext(context.Background(), "kubectl"); goPath.Err != nil {
 		if !errors.Is(goPath.Err, exec.ErrDot) {
 			drift.log.Infof("%v", goPath.Err.Error())
 			drift.log.Info("helm-drift requires 'kubectl' to identify drifts")

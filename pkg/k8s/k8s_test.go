@@ -11,6 +11,7 @@ import (
 
 type K8sTestSuite struct {
 	suite.Suite
+
 	resource     string
 	resourceHook string
 }

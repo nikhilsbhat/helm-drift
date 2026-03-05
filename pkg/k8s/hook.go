@@ -15,7 +15,8 @@ func (resource *Resource) IsHelmHook(dataMap string, hookKinds []string) (bool, 
 
 	kindYaml := *resource
 
-	if !isNestedKeyNotNil(kindYaml, "metadata.annotations.helm\\.sh/hook") || !isNestedKeyNotNil(kindYaml, "metadata.annotations.helm\\.sh/hook-delete-policy") {
+	if !isNestedKeyNotNil(kindYaml, "metadata.annotations.helm\\.sh/hook") ||
+		!isNestedKeyNotNil(kindYaml, "metadata.annotations.helm\\.sh/hook-delete-policy") {
 		return false, nil
 	}
 

@@ -43,16 +43,20 @@ func (drift *Drift) neat(deviation deviation.Deviation) ([]byte, error) {
 		log.Fatalf("Error finding GVR: %s", err.Error())
 	}
 
-	resource, err := dynamicClient.Resource(gvr).Namespace(drift.namespace).Get(context.TODO(), deviation.Resource, metav1.GetOptions{})
+	resource, err := dynamicClient.Resource(gvr).
+		Namespace(drift.namespace).
+		Get(context.TODO(), deviation.Resource, metav1.GetOptions{})
 	if err != nil {
-		drift.log.Errorf("fetching kubernetes manifests for '%s' '%s' in namespace '%s' errored with:  %v", deviation.Kind, deviation.Resource, drift.namespace, err)
+		drift.log.Errorf("fetching kubernetes manifests for '%s' '%s' in namespace '%s' errored with:  %v",
+			deviation.Kind, deviation.Resource, drift.namespace, err)
 
 		return nil, err
 	}
 
 	cleanedResource := cleanResource(drift.dropStandardHelmLabels(resource))
 
-	yamlData, err := yaml.MarshalWithOptions(cleanedResource.Object, yaml.IndentSequence(true), yaml.UseLiteralStyleIfMultiline(true))
+	yamlData, err := yaml.MarshalWithOptions(cleanedResource.Object, yaml.IndentSequence(true),
+		yaml.UseLiteralStyleIfMultiline(true))
 	if err != nil {
 		return nil, err
 	}
@@ -147,5 +151,7 @@ func findGVR(clientSet *kubernetes.Clientset, _, version, resourceType string) (
 		}
 	}
 
-	return schema.GroupVersionResource{}, &errors.DriftError{Message: fmt.Sprintf("resource type '%s' of version '%s' not found", resourceType, version)}
+	return schema.GroupVersionResource{}, &errors.DriftError{
+		Message: fmt.Sprintf("resource type '%s' of version '%s' not found", resourceType, version),
+	}
 }

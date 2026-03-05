@@ -59,7 +59,7 @@ func (drift *Drift) getChartsFromReleases() ([]*release.Release, error) {
 	var namespace string
 
 	if drift.isAll() {
-		drift.log.Debug("no namespace specified, fetching all helm releases from the the cluster")
+		drift.log.Debug("no namespace specified, fetching all helm releases from the cluster")
 	} else {
 		drift.log.Debugf("retrieving charts from the namespace '%s'", drift.namespace)
 		namespace = drift.namespace
