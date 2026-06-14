@@ -7,12 +7,14 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/nikhilsbhat/common/errors"
 	"github.com/nikhilsbhat/common/renderer"
 	"github.com/nikhilsbhat/helm-drift/pkg/deviation"
 	"github.com/sirupsen/logrus"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/util/homedir"
 )
 
@@ -68,6 +70,11 @@ type Drift struct {
 	log                  *logrus.Logger
 	writer               *bufio.Writer
 	renderer             renderer.Config
+	kubeClient           kubernetes.Interface
+	kubeClientErr        error
+	kubeClientOnce       sync.Once
+	hpaCache             map[string]map[string]struct{}
+	hpaCacheMu           sync.RWMutex
 }
 
 type resourcesInfo struct {

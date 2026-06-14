@@ -66,31 +66,37 @@ func (drift *Drift) Diff(renderedManifests *deviation.DriftedRelease) (*deviatio
 			drift.log.Debugf("setting namespace to %s", nameSpace)
 
 			isManagedByHPA, err := drift.IsManagedByHPA(dvn.Resource, dvn.Kind, nameSpace)
-			handleError(err)
+			if err != nil {
+				handleError(err)
+
+				return
+			}
 
 			cmd := command.NewCommand("kubectl", drift.log)
 
 			cmd.SetKubeDiffCmd(drift.kubeConfig, drift.kubeContext, nameSpace, arguments...)
 
 			dft, err := cmd.RunKubeDiffCmd(dvn)
-			handleError(err)
+			if err != nil {
+				handleError(err)
+
+				return
+			}
 
 			if !isManagedByHPA {
-				if dft.HasDrift {
-					renderedManifests.HasDrift = true
-				}
-
 				diffs[index] = dft
 
 				return
 			}
 
 			hasOnlyChangesScaledByHpa, err := drift.HasOnlyChangesScaledByHpa(dft.Deviations)
-			handleError(err)
+			if err != nil {
+				handleError(err)
 
-			if dft.HasDrift && (!hasOnlyChangesScaledByHpa || !drift.IgnoreHPAChanges) {
-				renderedManifests.HasDrift = true
-			} else {
+				return
+			}
+
+			if !dft.HasDrift || hasOnlyChangesScaledByHpa && drift.IgnoreHPAChanges {
 				dft.HasDrift = false
 				dft.Deviations = ""
 			}
@@ -112,6 +118,8 @@ func (drift *Drift) Diff(renderedManifests *deviation.DriftedRelease) (*deviatio
 	}
 
 	renderedManifests.Deviations = diffs
+	diffResults := deviation.Deviations(diffs)
+	renderedManifests.HasDrift = diffResults.Status() == deviation.Failed
 
 	drift.log.Debugf("ran diffs for all manifests for release '%s' successfully", renderedManifests.Release)
 

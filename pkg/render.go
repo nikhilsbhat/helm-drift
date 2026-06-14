@@ -1,7 +1,6 @@
 package pkg
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"strings"
@@ -11,6 +10,8 @@ import (
 )
 
 func (drift *Drift) render(drifts []*deviation.DriftedRelease) error {
+	defer drift.flush()
+
 	drift.write(addNewLine(""))
 
 	release := deviation.DriftedReleases(drifts)
@@ -28,6 +29,7 @@ func (drift *Drift) render(drifts []*deviation.DriftedRelease) error {
 	drift.print(drifts)
 
 	if release.Drifted() && !drift.DisableExitWithError {
+		drift.flush()
 		os.Exit(1)
 	}
 
@@ -133,6 +135,7 @@ func (drift *Drift) allTable(table *tablewriter.Table, deviations []*deviation.D
 
 func (drift *Drift) print(drifts []*deviation.DriftedRelease) {
 	if len(drifts) == 0 {
+		drift.flush()
 		os.Exit(0)
 	}
 
@@ -192,13 +195,12 @@ func (drift *Drift) write(data string) {
 	if err != nil {
 		drift.log.Fatalln(err)
 	}
+}
 
-	defer func(writer *bufio.Writer) {
-		err = writer.Flush()
-		if err != nil {
-			drift.log.Fatalln(err)
-		}
-	}(drift.writer)
+func (drift *Drift) flush() {
+	if err := drift.writer.Flush(); err != nil {
+		drift.log.Fatalln(err)
+	}
 }
 
 func addNewLine(message string) string {

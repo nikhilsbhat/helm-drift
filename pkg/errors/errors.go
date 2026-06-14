@@ -68,7 +68,7 @@ func (e *NotAllError) Error() string {
 	for _, resource := range e.Manifests {
 		rs := resource
 
-		if !funk.Contains(e.ResourceFromDeviations, func(dvn deviation.Deviation) bool {
+		if !funk.Contains(e.ResourceFromDeviations, func(dvn *deviation.Deviation) bool {
 			return (dvn.Resource == rs.Resource) && (dvn.Kind == rs.Kind)
 		}) {
 			diffs = append(diffs, resource)

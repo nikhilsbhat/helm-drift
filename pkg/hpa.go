@@ -21,36 +21,70 @@ const (
 )
 
 func (drift *Drift) IsManagedByHPA(name, kind, nameSpace string) (bool, error) {
-	config, err := buildConfigWithContextFromFlags(drift.kubeContext, drift.kubeConfig)
+	hpaTargets, err := drift.hpaTargets(nameSpace)
 	if err != nil {
-		return false, &errors.DriftError{Message: fmt.Sprintf("building config with context errored with '%v'", err)}
+		return false, err
 	}
 
-	// Create a Kubernetes clientset
-	clientSet, err := kubernetes.NewForConfig(config)
+	_, isManagedByHPA := hpaTargets[hpaTargetKey(name, kind)]
+	if isManagedByHPA {
+		drift.log.Debugf("the '%s' '%s' is managed by hpa hence the drifts for this would be suppressed if enabled", kind, name)
+	}
+
+	return isManagedByHPA, nil
+}
+
+func (drift *Drift) hpaTargets(nameSpace string) (map[string]struct{}, error) {
+	drift.hpaCacheMu.RLock()
+	if hpaTargets, ok := drift.hpaCache[nameSpace]; ok {
+		drift.hpaCacheMu.RUnlock()
+
+		return hpaTargets, nil
+	}
+	drift.hpaCacheMu.RUnlock()
+
+	clientSet, err := drift.getKubeClient()
 	if err != nil {
-		return false, &errors.DriftError{Message: fmt.Sprintf("creating kubernetes clientsets errored with '%v'", err)}
+		return nil, err
 	}
 
 	response, err := clientSet.AutoscalingV2().HorizontalPodAutoscalers(nameSpace).
 		List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 
-	var isManagedByHPA bool
-
+	hpaTargets := make(map[string]struct{}, len(response.Items))
 	for _, item := range response.Items {
-		if item.Spec.ScaleTargetRef.Name == name && item.Spec.ScaleTargetRef.Kind == kind {
-			drift.log.Debugf("the '%s' '%s' is managed by hpa hence the drifts for this would be suppressed if enabled", kind, name)
-
-			isManagedByHPA = true
-
-			break
-		}
+		hpaTargets[hpaTargetKey(item.Spec.ScaleTargetRef.Name, item.Spec.ScaleTargetRef.Kind)] = struct{}{}
 	}
 
-	return isManagedByHPA, nil
+	drift.hpaCacheMu.Lock()
+	if drift.hpaCache == nil {
+		drift.hpaCache = make(map[string]map[string]struct{})
+	}
+	drift.hpaCache[nameSpace] = hpaTargets
+	drift.hpaCacheMu.Unlock()
+
+	return hpaTargets, nil
+}
+
+func (drift *Drift) getKubeClient() (kubernetes.Interface, error) {
+	drift.kubeClientOnce.Do(func() {
+		config, err := buildConfigWithContextFromFlags(drift.kubeContext, drift.kubeConfig)
+		if err != nil {
+			drift.kubeClientErr = &errors.DriftError{Message: fmt.Sprintf("building config with context errored with '%v'", err)}
+
+			return
+		}
+
+		drift.kubeClient, drift.kubeClientErr = kubernetes.NewForConfig(config)
+		if drift.kubeClientErr != nil {
+			drift.kubeClientErr = &errors.DriftError{Message: fmt.Sprintf("creating kubernetes clientsets errored with '%v'", drift.kubeClientErr)}
+		}
+	})
+
+	return drift.kubeClient, drift.kubeClientErr
 }
 
 func buildConfigWithContextFromFlags(context string, kubeConfigPath string) (*rest.Config, error) {
@@ -59,6 +93,10 @@ func buildConfigWithContextFromFlags(context string, kubeConfigPath string) (*re
 		&clientcmd.ConfigOverrides{
 			CurrentContext: context,
 		}).ClientConfig()
+}
+
+func hpaTargetKey(name, kind string) string {
+	return kind + "/" + name
 }
 
 func (drift *Drift) HasOnlyChangesScaledByHpa(diffOutput string) (bool, error) {
@@ -94,7 +132,7 @@ func (drift *Drift) HasOnlyChangesScaledByHpa(diffOutput string) (bool, error) {
 			continue
 		}
 
-		break
+		return false, nil
 	}
 
 	if err := scanner.Err(); err != nil {

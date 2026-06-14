@@ -2,31 +2,69 @@
 package pkg
 
 import (
-	"path/filepath"
 	"testing"
 
-	"github.com/nikhilsbhat/helm-drift/pkg/deviation"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"k8s.io/client-go/util/homedir"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
-func TestDrift_NeatNew(t *testing.T) {
-	t.Run("", func(t *testing.T) {
-		drift := Drift{}
-		drift.SetLogger("debug")
-		drift.SetNamespace("sample")
-		drift.SetKubeConfig(filepath.Join(homedir.HomeDir(), ".kube", "config"))
-
-		dvn := deviation.Deviation{
-			APIVersion: "v1",
-			Kind:       "ServiceAccount",
-			Resource:   "sample",
+func TestCleanResource(t *testing.T) {
+	t.Run("drops cluster managed fields", func(t *testing.T) {
+		resource := &unstructured.Unstructured{
+			Object: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ServiceAccount",
+				"metadata": map[string]interface{}{
+					"name":              "sample",
+					"namespace":         "sample",
+					"managedFields":     []interface{}{},
+					"uid":               "uid",
+					"resourceVersion":   "1",
+					"generation":        int64(1),
+					"creationTimestamp": "2026-06-14T00:00:00Z",
+				},
+				"status": map[string]interface{}{},
+			},
 		}
 
-		out, err := drift.neat(dvn)
-		require.NoError(t, err)
+		cleanedResource := cleanResource(resource)
 
-		assert.Nil(t, out)
+		assert.NotContains(t, cleanedResource.Object, "status")
+		assert.NotContains(t, cleanedResource.Object["metadata"], "managedFields")
+		assert.NotContains(t, cleanedResource.Object["metadata"], "uid")
+		assert.NotContains(t, cleanedResource.Object["metadata"], "resourceVersion")
+		assert.NotContains(t, cleanedResource.Object["metadata"], "generation")
+		assert.NotContains(t, cleanedResource.Object["metadata"], "creationTimestamp")
+	})
+}
+
+func TestDrift_DropStandardHelmLabels(t *testing.T) {
+	t.Run("drops helm labels and annotations", func(t *testing.T) {
+		drift := Drift{}
+		drift.SetLogger("debug")
+
+		resource := &unstructured.Unstructured{
+			Object: map[string]interface{}{
+				"metadata": map[string]interface{}{
+					"labels": map[string]interface{}{
+						"app.kubernetes.io/name": "sample",
+						"custom":                 "keep",
+					},
+					"annotations": map[string]interface{}{
+						"meta.helm.sh/release-name": "sample",
+						"custom":                    "keep",
+					},
+				},
+			},
+		}
+
+		cleanedResource := drift.dropStandardHelmLabels(resource)
+		labels, _, _ := unstructured.NestedStringMap(cleanedResource.Object, "metadata", "labels")
+		annotations, _, _ := unstructured.NestedStringMap(cleanedResource.Object, "metadata", "annotations")
+
+		assert.NotContains(t, labels, "app.kubernetes.io/name")
+		assert.Equal(t, "keep", labels["custom"])
+		assert.NotContains(t, annotations, "meta.helm.sh/release-name")
+		assert.Equal(t, "keep", annotations["custom"])
 	})
 }

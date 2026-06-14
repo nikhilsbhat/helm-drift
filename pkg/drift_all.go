@@ -37,7 +37,7 @@ func (drift *Drift) GetAllDrift() {
 		}
 	}(drift)
 
-	driftedReleases := make([]*deviation.DriftedRelease, 0)
+	driftedReleases := make([]*deviation.DriftedRelease, len(releases))
 
 	sem := make(chan struct{}, func() int {
 		if drift.Limit != 0 {
@@ -62,10 +62,10 @@ func (drift *Drift) GetAllDrift() {
 		close(errChan)
 	}()
 
-	for _, release := range releases {
+	for index, release := range releases {
 		sem <- struct{}{}
 
-		go func(release *helmRelease.Release) {
+		go func(index int, release *helmRelease.Release) {
 			defer waitGroup.Done()
 			defer func() { <-sem }()
 
@@ -76,11 +76,15 @@ func (drift *Drift) GetAllDrift() {
 			deviations, err := drift.renderToDisk(kubeKindTemplates, "", release.Name, release.Namespace)
 			if err != nil {
 				errChan <- err
+
+				return
 			}
 
 			out, err := drift.Diff(deviations)
 			if err != nil {
 				errChan <- err
+
+				return
 			}
 
 			if len(out.Deviations) == 0 && err == nil {
@@ -89,8 +93,8 @@ func (drift *Drift) GetAllDrift() {
 				return
 			}
 
-			driftedReleases = append(driftedReleases, out)
-		}(release)
+			driftedReleases[index] = out
+		}(index, release)
 	}
 
 	var driftErrors []string
@@ -105,9 +109,16 @@ func (drift *Drift) GetAllDrift() {
 		drift.log.Fatalf("%v", &errors.DriftError{Message: fmt.Sprintf("identifying drifts errored with: %s", strings.Join(driftErrors, "\n"))})
 	}
 
+	filteredDriftedReleases := make([]*deviation.DriftedRelease, 0, len(driftedReleases))
+	for _, driftedRelease := range driftedReleases {
+		if driftedRelease != nil {
+			filteredDriftedReleases = append(filteredDriftedReleases, driftedRelease)
+		}
+	}
+
 	drift.timeSpent = time.Since(startTime).Seconds()
 
-	if err = drift.render(driftedReleases); err != nil {
+	if err = drift.render(filteredDriftedReleases); err != nil {
 		drift.log.Fatalf("%v", err)
 	}
 }
