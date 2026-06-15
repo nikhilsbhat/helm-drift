@@ -40,10 +40,14 @@ func (s *EnvSettings) AddFlags(_ *pflag.FlagSet) {
 func findKubeConfigForContext(context string) (string, error) {
 	KubeConfigFromEnv := os.Getenv("KUBECONFIG")
 	if KubeConfigFromEnv == "" {
-		return "", &errors.DriftError{Message: "'KUBECONFIG' env variable is not set"}
+		return "", nil
 	}
 
 	paths := strings.Split(KubeConfigFromEnv, ":")
+
+	if context == "" {
+		return expandHome(paths[0])
+	}
 
 	for _, p := range paths {
 		expanded, err := expandHome(p)

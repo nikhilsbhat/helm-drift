@@ -50,8 +50,21 @@ users:
 	require.NoError(t, err)
 	assert.Equal(t, kubeConfig, found)
 
+	found, err = findKubeConfigForContext("")
+	require.NoError(t, err)
+	assert.Equal(t, kubeConfig, found)
+
 	_, err = findKubeConfigForContext("missing")
 	assert.Error(t, err)
+}
+
+func TestFindKubeConfigForContextWithoutKubeConfig(t *testing.T) {
+	t.Setenv("KUBECONFIG", "")
+
+	found, err := findKubeConfigForContext("")
+
+	require.NoError(t, err)
+	assert.Empty(t, found)
 }
 
 func TestEnvSettingsNew(t *testing.T) {

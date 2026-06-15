@@ -12,6 +12,9 @@ DATE?=$(shell date)
 PlATFORM?=$(shell go env GOOS)
 ARCHITECTURE?=$(shell go env GOARCH)
 GOVERSION?=$(shell go version | awk '{printf $$3}')
+HELM_PLUGINS_DIR?=$(shell helm env HELM_PLUGINS)
+HELM_PLUGIN_PATH=$(HELM_PLUGINS_DIR)/$(APP_NAME)
+HELM_INSTALL_PATH=$(HELM_PLUGIN_PATH)/bin
 TEST_FILES?=$(shell go list ./... | grep -v /vendor/ | grep -v examples)
 BUILD_WITH_FLAGS="-s -w -X 'github.com/nikhilsbhat/helm-drift/version.Version=${VERSION}' -X 'github.com/nikhilsbhat/helm-drift/version.Env=${BUILD_ENVIRONMENT}' -X 'github.com/nikhilsbhat/helm-drift/version.BuildDate=${DATE}' -X 'github.com/nikhilsbhat/helm-drift/version.Revision=${REVISION}' -X 'github.com/nikhilsbhat/helm-drift/version.Platform=${PlATFORM}/${ARCHITECTURE}' -X 'github.com/nikhilsbhat/helm-drift/version.GoVersion=${GOVERSION}'"
 
@@ -24,7 +27,7 @@ endif
 
 .PHONY: help
 help: ## Prints help (only for targets with comments)
-	@grep -E '^[a-zA-Z0-9._-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+	@awk 'BEGIN {FS = ":.*## "}; /^[a-zA-Z0-9_\/.-]+:.*## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
 
 local/fmt: ## Lints all the go code in the application.
 	gofmt -w $(GOFMT_FILES)
@@ -48,11 +51,19 @@ local/push: local/build ## Pushes built artifact to the specified location
 local/run: local/build ## Generates the artifact and start the service in the current directory
 	./${APP_NAME}
 
+local/install: local/build ## Installs helm plugin locally
+	@mkdir -p $(HELM_INSTALL_PATH)
+	@cp plugin.yaml install-binary.sh $(HELM_PLUGIN_PATH)
+	@rm -f $(HELM_INSTALL_PATH)/$(APP_NAME)
+	@cp $(APP_NAME)_v$(VERSION) $(HELM_INSTALL_PATH)/$(APP_NAME)
+	@chmod +x $(HELM_INSTALL_PATH)/$(APP_NAME)
+	@echo "installed $(APP_NAME) to $(HELM_PLUGIN_PATH)"
+
 publish: local/check ## Builds and publishes the app
 	GOVERSION=${GOVERSION} BUILD_ENVIRONMENT=${BUILD_ENVIRONMENT} PLUGIN_PATH=${APP_DIR} goreleaser release --clean
 
 mock/publish: local/check ## Builds and mocks app release
-	GOVERSION=${GOVERSION} BUILD_ENVIRONMENT=${BUILD_ENVIRONMENT} PLUGIN_PATH=${APP_DIR} goreleaser release --skip=publish --clean
+	GOVERSION=${GOVERSION} BUILD_ENVIRONMENT=${BUILD_ENVIRONMENT} PLUGIN_PATH=${APP_DIR} goreleaser release --skip=publish --clean --snapshot
 
 lint: ## Lint's application for errors, it is a linters aggregator (https://github.com/golangci/golangci-lint).
 	if [ -z "${DEV}" ]; then golangci-lint run --color always ; else docker run --rm -v $(APP_DIR):/app -w /app golangci/golangci-lint:v1.46.2-alpine golangci-lint run --color always ; fi
