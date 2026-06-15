@@ -16,21 +16,21 @@ func (v *ValueFiles) String() string {
 
 //nolint:goerr113
 func (v *ValueFiles) Valid() error {
-	errStr := ""
+	errStr := strings.Builder{}
 
 	for _, valuesFile := range *v {
 		if strings.TrimSpace(valuesFile) != "-" {
 			if _, err := os.Stat(valuesFile); os.IsNotExist(err) {
-				errStr += err.Error()
+				errStr.WriteString(err.Error())
 			}
 		}
 	}
 
-	if len(errStr) == 0 {
+	if errStr.Len() == 0 {
 		return nil
 	}
 
-	return &errors.CommonError{Message: errStr}
+	return &errors.CommonError{Message: errStr.String()}
 }
 
 func (v *ValueFiles) Type() string {
@@ -38,7 +38,7 @@ func (v *ValueFiles) Type() string {
 }
 
 func (v *ValueFiles) Set(value string) error {
-	for _, filePath := range strings.Split(value, ",") {
+	for filePath := range strings.SplitSeq(value, ",") {
 		*v = append(*v, filePath)
 	}
 

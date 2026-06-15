@@ -11,19 +11,19 @@ import (
 func TestCleanResource(t *testing.T) {
 	t.Run("drops cluster managed fields", func(t *testing.T) {
 		resource := &unstructured.Unstructured{
-			Object: map[string]interface{}{
+			Object: map[string]any{
 				"apiVersion": "v1",
 				"kind":       "ServiceAccount",
-				"metadata": map[string]interface{}{
+				"metadata": map[string]any{
 					"name":              "sample",
 					"namespace":         "sample",
-					"managedFields":     []interface{}{},
+					"managedFields":     []any{},
 					"uid":               "uid",
 					"resourceVersion":   "1",
 					"generation":        int64(1),
 					"creationTimestamp": "2026-06-14T00:00:00Z",
 				},
-				"status": map[string]interface{}{},
+				"status": map[string]any{},
 			},
 		}
 
@@ -44,13 +44,13 @@ func TestDrift_DropStandardHelmLabels(t *testing.T) {
 		drift.SetLogger("debug")
 
 		resource := &unstructured.Unstructured{
-			Object: map[string]interface{}{
-				"metadata": map[string]interface{}{
-					"labels": map[string]interface{}{
+			Object: map[string]any{
+				"metadata": map[string]any{
+					"labels": map[string]any{
 						"app.kubernetes.io/name": "sample",
 						"custom":                 "keep",
 					},
-					"annotations": map[string]interface{}{
+					"annotations": map[string]any{
 						"meta.helm.sh/release-name": "sample",
 						"custom":                    "keep",
 					},

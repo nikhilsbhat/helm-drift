@@ -21,7 +21,7 @@ func TestValueFiles(t *testing.T) {
 
 func TestValueFilesValid(t *testing.T) {
 	valuesFile := filepath.Join(t.TempDir(), "values.yaml")
-	require.NoError(t, os.WriteFile(valuesFile, []byte("key: value\n"), 0o644))
+	require.NoError(t, os.WriteFile(valuesFile, []byte("key: value\n"), 0o600))
 
 	values := ValueFiles{valuesFile, "-"}
 

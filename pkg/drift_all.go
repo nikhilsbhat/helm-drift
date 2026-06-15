@@ -39,13 +39,7 @@ func (drift *Drift) GetAllDrift() {
 
 	driftedReleases := make([]*deviation.DriftedRelease, len(releases))
 
-	sem := make(chan struct{}, func() int {
-		if drift.Limit != 0 {
-			return drift.Limit
-		}
-
-		return len(releases)
-	}())
+	sem := make(chan struct{}, drift.releaseConcurrencyLimit(releases))
 
 	if drift.Limit != 0 {
 		drift.log.Debugf("limit on concurrency is set to '%d', so batching the executions of helm releases", drift.Limit)
@@ -97,28 +91,33 @@ func (drift *Drift) GetAllDrift() {
 		}(index, release)
 	}
 
-	var driftErrors []string
-
-	for errCh := range errChan {
-		if errCh != nil {
-			driftErrors = append(driftErrors, errCh.Error())
-		}
-	}
-
-	if len(driftErrors) != 0 {
+	if driftErrors := collectErrors(errChan); len(driftErrors) != 0 {
 		drift.log.Fatalf("%v", &errors.DriftError{Message: fmt.Sprintf("identifying drifts errored with: %s", strings.Join(driftErrors, "\n"))})
 	}
 
+	drift.timeSpent = time.Since(startTime).Seconds()
+
+	if err = drift.render(filterDriftedReleases(driftedReleases)); err != nil {
+		drift.log.Fatalf("%v", err)
+	}
+}
+
+func (drift *Drift) releaseConcurrencyLimit(releases []*helmRelease.Release) int {
+	if drift.Limit != 0 {
+		return drift.Limit
+	}
+
+	return len(releases)
+}
+
+func filterDriftedReleases(driftedReleases []*deviation.DriftedRelease) []*deviation.DriftedRelease {
 	filteredDriftedReleases := make([]*deviation.DriftedRelease, 0, len(driftedReleases))
+
 	for _, driftedRelease := range driftedReleases {
 		if driftedRelease != nil {
 			filteredDriftedReleases = append(filteredDriftedReleases, driftedRelease)
 		}
 	}
 
-	drift.timeSpent = time.Since(startTime).Seconds()
-
-	if err = drift.render(filteredDriftedReleases); err != nil {
-		drift.log.Fatalf("%v", err)
-	}
+	return filteredDriftedReleases
 }

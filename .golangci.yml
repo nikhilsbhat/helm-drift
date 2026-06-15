@@ -51,6 +51,9 @@ linters:
     rules:
       - linters:
           - mnd
+          - err113
+          - testpackage
+          - wsl_v5
         path: _test\.go
       - linters:
           - gocritic

@@ -10,7 +10,7 @@ import (
 )
 
 type (
-	Resource map[string]interface{}
+	Resource map[string]any
 )
 
 // ResourceInterface implements methods to get resource name and kind.
@@ -52,7 +52,7 @@ func (resource *Resource) GetMetadata(dataMap string, key string, log *logrus.Lo
 
 	kindYaml := *resource
 
-	metadata, metadataExists := kindYaml["metadata"].(map[string]interface{})
+	metadata, metadataExists := kindYaml["metadata"].(map[string]any)
 	if !metadataExists {
 		log.Debug("failed to get 'metadata' from the manifest")
 
@@ -67,7 +67,7 @@ func (resource *Resource) GetMetadata(dataMap string, key string, log *logrus.Lo
 	return value, nil
 }
 
-func isNestedKeyNotNil(data map[string]interface{}, key string) bool {
+func isNestedKeyNotNil(data map[string]any, key string) bool {
 	if len(data) == 0 {
 		return false
 	}
@@ -81,7 +81,7 @@ func isNestedKeyNotNil(data map[string]interface{}, key string) bool {
 			return false
 		}
 
-		if nestedMap, ok := value.(map[string]interface{}); ok {
+		if nestedMap, ok := value.(map[string]any); ok {
 			data = nestedMap
 		} else {
 			// Check if this is the last key and it is not nil
@@ -101,9 +101,9 @@ func splitKey(key string, delimiter string, escapedchar string) []string {
 	var result []string
 
 	for i := 0; i < len(parts); i++ { //nolint:varnamelen
-		if strings.HasSuffix(parts[i], escapedchar) {
+		if part, ok := strings.CutSuffix(parts[i], escapedchar); ok {
 			// Remove the trailing backslash and merge it with the next part
-			parts[i] = strings.TrimSuffix(parts[i], escapedchar)
+			parts[i] = part
 			if i+1 < len(parts) {
 				result = append(result, parts[i]+delimiter+parts[i+1])
 				i++ // Skip the next part

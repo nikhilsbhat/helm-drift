@@ -3,7 +3,6 @@ package cmd
 import (
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/nikhilsbhat/helm-drift/pkg"
@@ -43,7 +42,7 @@ current-context: wanted
 users:
 - name: local
   user: {}
-`), 0o644))
+`), 0o600))
 	t.Setenv("KUBECONFIG", kubeConfig)
 
 	found, err := findKubeConfigForContext("wanted")
@@ -55,7 +54,7 @@ users:
 	assert.Equal(t, kubeConfig, found)
 
 	_, err = findKubeConfigForContext("missing")
-	assert.Error(t, err)
+	require.Error(t, err)
 }
 
 func TestFindKubeConfigForContextWithoutKubeConfig(t *testing.T) {
@@ -85,7 +84,7 @@ current-context: wanted
 users:
 - name: local
   user: {}
-`), 0o644))
+`), 0o600))
 	t.Setenv("KUBECONFIG", kubeConfig)
 	t.Setenv("HELM_KUBECONTEXT", "wanted")
 	t.Setenv("HELM_NAMESPACE", "sample")
@@ -99,27 +98,26 @@ users:
 }
 
 func TestValidateAndSetArgs(t *testing.T) {
-	originalDrifts := drifts
-	t.Cleanup(func() { drifts = originalDrifts })
+	t.Cleanup(func() { drifts = pkg.Drift{} })
 
 	drifts = pkg.Drift{}
 
 	err := validateAndSetArgs(&cobra.Command{}, []string{"release"})
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "[RELEASE] or [CHART] cannot be empty")
 
 	drifts = pkg.Drift{}
 	err = validateAndSetArgs(&cobra.Command{}, []string{"release", "chart"})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	drifts = pkg.Drift{FromRelease: true}
 	err = validateAndSetArgs(&cobra.Command{}, []string{"release"})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func TestUsageTemplate(t *testing.T) {
 	usage := getUsageTemplate()
 
-	assert.True(t, strings.Contains(usage, "Usage:"))
-	assert.True(t, strings.Contains(usage, "Available Commands:"))
+	assert.Contains(t, usage, "Usage:")
+	assert.Contains(t, usage, "Available Commands:")
 }

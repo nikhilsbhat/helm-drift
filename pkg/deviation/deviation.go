@@ -90,8 +90,8 @@ func (dvn *Deviation) Drifted() string {
 }
 
 // GetDriftAsMap returns the map equivalent of drifted release configuration.
-func (dvn *Deviations) GetDriftAsMap(chart, release, time string) map[string]interface{} {
-	return map[string]interface{}{
+func (dvn *Deviations) GetDriftAsMap(chart, release, time string) map[string]any {
+	return map[string]any{
 		"drifts":       dvn,
 		"total_drifts": dvn.Count(),
 		"time":         time,

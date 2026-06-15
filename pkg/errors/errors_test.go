@@ -1,19 +1,20 @@
-package errors
+package errors_test
 
 import (
 	"errors"
 	"testing"
 
 	"github.com/nikhilsbhat/helm-drift/pkg/deviation"
+	pkgErr "github.com/nikhilsbhat/helm-drift/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestSimpleErrors(t *testing.T) {
-	assert.Equal(t, "pre", (&PreValidationError{Message: "pre"}).Error())
-	assert.Equal(t, "drift", (&DriftError{Message: "drift"}).Error())
+	assert.Equal(t, "pre", (&pkgErr.PreValidationError{Message: "pre"}).Error())
+	assert.Equal(t, "drift", (&pkgErr.DriftError{Message: "drift"}).Error())
 	assert.Equal(t,
 		"failed to get key 'metadata.name' from the manifest 'manifest'",
-		(&NotFoundError{Key: "metadata.name", Manifest: "manifest"}).Error(),
+		(&pkgErr.NotFoundError{Key: "metadata.name", Manifest: "manifest"}).Error(),
 	)
 }
 
@@ -24,7 +25,7 @@ func TestDiskError(t *testing.T) {
 	errs <- errors.New("second")
 	close(errs)
 
-	message, hasErrors := (&DiskError{Errors: errs}).HasDiskError()
+	message, hasErrors := (&pkgErr.DiskError{Errors: errs}).HasDiskError()
 
 	assert.True(t, hasErrors)
 	assert.Contains(t, message, "first")
@@ -35,14 +36,14 @@ func TestDiskErrorWithoutErrors(t *testing.T) {
 	errs := make(chan error)
 	close(errs)
 
-	message, hasErrors := (&DiskError{Errors: errs}).HasDiskError()
+	message, hasErrors := (&pkgErr.DiskError{Errors: errs}).HasDiskError()
 
 	assert.False(t, hasErrors)
 	assert.Equal(t, "rendering helm manifests to disk errored: ", message)
 }
 
 func TestNotAllError(t *testing.T) {
-	err := (&NotAllError{
+	err := (&pkgErr.NotAllError{
 		ResourceFromDeviations: []*deviation.Deviation{{Resource: "rendered", Kind: "Service"}},
 		Manifests: []*deviation.Deviation{
 			{Resource: "rendered", Kind: "Service"},

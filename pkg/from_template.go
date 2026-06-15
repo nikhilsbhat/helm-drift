@@ -13,6 +13,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const helmTemplateBaseArgCount = 3
+
 func (drift *Drift) getChartFromTemplate() ([]byte, error) {
 	flags := make([]string, 0)
 	for _, value := range drift.Values {
@@ -55,7 +57,8 @@ func (drift *Drift) getChartFromTemplate() ([]byte, error) {
 		flags = append(flags, "--version", drift.Version)
 	}
 
-	args := []string{"template", drift.release, drift.chart}
+	args := make([]string, 0, helmTemplateBaseArgCount+len(flags))
+	args = append(args, "template", drift.release, drift.chart)
 	args = append(args, flags...)
 
 	drift.log.Debugf("rendering helm chart with following commands/flags '%s'", strings.Join(args, ", "))

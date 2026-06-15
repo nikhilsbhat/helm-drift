@@ -20,7 +20,7 @@ func (resource *Resource) IsHelmHook(dataMap string, hookKinds []string) (bool, 
 		return false, nil
 	}
 
-	annotations, annotationsExists := kindYaml["metadata"].(map[string]interface{})["annotations"].(map[string]interface{})
+	annotations, annotationsExists := kindYaml["metadata"].(map[string]any)["annotations"].(map[string]any)
 	if !annotationsExists {
 		return false, nil
 	}
@@ -32,9 +32,7 @@ func (resource *Resource) IsHelmHook(dataMap string, hookKinds []string) (bool, 
 
 	hookType = strings.TrimSpace(hookType)
 
-	hookTypes := strings.Split(hookType, ",")
-
-	for _, hkType := range hookTypes {
+	for hkType := range strings.SplitSeq(hookType, ",") {
 		if funk.Contains(hookKinds, hkType) {
 			return true, nil
 		}

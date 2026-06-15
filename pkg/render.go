@@ -10,18 +10,19 @@ import (
 )
 
 func (drift *Drift) render(drifts []*deviation.DriftedRelease) error {
-	defer drift.flush()
-
 	drift.write(addNewLine(""))
 
 	release := deviation.DriftedReleases(drifts)
 
 	if drift.json || drift.yaml {
+		drift.flush()
+
 		return drift.renderer.Render(drifts)
 	}
 
 	if drift.table {
 		drift.toTABLE(drifts)
+		drift.flush()
 
 		return nil
 	}
@@ -30,8 +31,11 @@ func (drift *Drift) render(drifts []*deviation.DriftedRelease) error {
 
 	if release.Drifted() && !drift.DisableExitWithError {
 		drift.flush()
+
 		os.Exit(1)
 	}
+
+	drift.flush()
 
 	return nil
 }

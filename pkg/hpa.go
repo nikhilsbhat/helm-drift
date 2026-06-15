@@ -36,11 +36,13 @@ func (drift *Drift) IsManagedByHPA(name, kind, nameSpace string) (bool, error) {
 
 func (drift *Drift) hpaTargets(nameSpace string) (map[string]struct{}, error) {
 	drift.hpaCacheMu.RLock()
+
 	if hpaTargets, ok := drift.hpaCache[nameSpace]; ok {
 		drift.hpaCacheMu.RUnlock()
 
 		return hpaTargets, nil
 	}
+
 	drift.hpaCacheMu.RUnlock()
 
 	clientSet, err := drift.getKubeClient()
@@ -63,6 +65,7 @@ func (drift *Drift) hpaTargets(nameSpace string) (map[string]struct{}, error) {
 	if drift.hpaCache == nil {
 		drift.hpaCache = make(map[string]map[string]struct{})
 	}
+
 	drift.hpaCache[nameSpace] = hpaTargets
 	drift.hpaCacheMu.Unlock()
 

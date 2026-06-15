@@ -105,15 +105,7 @@ func (drift *Drift) Diff(renderedManifests *deviation.DriftedRelease) (*deviatio
 		}(index, dvn)
 	}
 
-	var diffErrors []string
-
-	for errCh := range errChan {
-		if errCh != nil {
-			diffErrors = append(diffErrors, errCh.Error())
-		}
-	}
-
-	if len(diffErrors) != 0 {
+	if diffErrors := collectErrors(errChan); len(diffErrors) != 0 {
 		return nil, &errors.DriftError{Message: fmt.Sprintf("calculating diff errored with: %s", strings.Join(diffErrors, "\n"))}
 	}
 
@@ -124,6 +116,18 @@ func (drift *Drift) Diff(renderedManifests *deviation.DriftedRelease) (*deviatio
 	drift.log.Debugf("ran diffs for all manifests for release '%s' successfully", renderedManifests.Release)
 
 	return renderedManifests, nil
+}
+
+func collectErrors(errChan <-chan error) []string {
+	var collectedErrors []string
+
+	for err := range errChan {
+		if err != nil {
+			collectedErrors = append(collectedErrors, err.Error())
+		}
+	}
+
+	return collectedErrors
 }
 
 func (drift *Drift) setNameSpace(releaseNameSpace *deviation.DriftedRelease, manifestNameSpace *deviation.Deviation) string {
