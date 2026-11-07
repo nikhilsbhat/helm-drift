@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -15,7 +14,6 @@ import (
 	"github.com/nikhilsbhat/helm-drift/pkg/deviation"
 	"github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/util/homedir"
 )
 
 const (
@@ -160,9 +158,6 @@ func (drift *Drift) SetNamespace(namespace string) {
 
 func (drift *Drift) SetKubeConfig(kubeConfig string) {
 	drift.kubeConfig = kubeConfig
-	if len(drift.kubeConfig) == 0 {
-		drift.kubeConfig = filepath.Join(homedir.HomeDir(), ".kube", "config")
-	}
 }
 
 func (drift *Drift) SetKubeContext(kubeContext string) {

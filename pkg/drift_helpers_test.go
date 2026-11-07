@@ -19,7 +19,9 @@ func TestDriftSettersAndOutputFormats(t *testing.T) {
 
 	assert.Equal(t, "default", drift.namespace)
 	assert.Equal(t, "context", drift.kubeContext)
-	assert.Contains(t, drift.kubeConfig, ".kube/config")
+	assert.Empty(t, drift.kubeConfig)
+	drift.SetKubeConfig("/tmp/explicit-config")
+	assert.Equal(t, "/tmp/explicit-config", drift.kubeConfig)
 
 	drift.OutputFormat = "json"
 	drift.SetOutputFormats()

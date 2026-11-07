@@ -91,8 +91,11 @@ func (drift *Drift) getKubeClient() (kubernetes.Interface, error) {
 }
 
 func buildConfigWithContextFromFlags(context string, kubeConfigPath string) (*rest.Config, error) {
+	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
+	loadingRules.ExplicitPath = kubeConfigPath
+
 	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
-		&clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeConfigPath},
+		loadingRules,
 		&clientcmd.ConfigOverrides{
 			CurrentContext: context,
 		}).ClientConfig()

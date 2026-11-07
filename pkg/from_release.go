@@ -7,26 +7,18 @@ import (
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/release"
+
 	// Import to initialize client auth plugins.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
 
 // getChartFromRelease should get the manifest from the selected release.
 func (drift *Drift) getChartFromRelease() ([]byte, error) {
-	settings := cli.New()
+	settings := drift.helmSettings()
 
 	drift.log.Debugf("fetching chart manifest for release '%s' from kube cluster", drift.release)
 
 	actionConfig := new(action.Configuration)
-
-	kubeContext := drift.kubeContext
-	if len(kubeContext) != 0 {
-		settings.KubeContext = kubeContext
-	}
-
-	if len(drift.kubeConfig) != 0 {
-		settings.KubeConfig = drift.kubeConfig
-	}
 
 	if err := actionConfig.Init(settings.RESTClientGetter(), settings.Namespace(), os.Getenv("HELM_DRIVER"), log.Printf); err != nil {
 		drift.log.Error("oops initialising helm client errored with", err)
@@ -52,7 +44,7 @@ func (drift *Drift) getChartFromRelease() ([]byte, error) {
 }
 
 func (drift *Drift) getChartsFromReleases() ([]*release.Release, error) {
-	settings := cli.New()
+	settings := drift.helmSettings()
 
 	drift.log.Debug("fetching all helm releases from kube cluster")
 
@@ -75,6 +67,19 @@ func (drift *Drift) getChartsFromReleases() ([]*release.Release, error) {
 	client := action.NewList(actionConfig)
 
 	return client.Run()
+}
+
+func (drift *Drift) helmSettings() *cli.EnvSettings {
+	settings := cli.New()
+	if drift.kubeContext != "" {
+		settings.KubeContext = drift.kubeContext
+	}
+
+	if drift.kubeConfig != "" {
+		settings.KubeConfig = drift.kubeConfig
+	}
+
+	return settings
 }
 
 func (drift *Drift) isAll() bool {
